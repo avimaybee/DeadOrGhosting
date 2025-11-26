@@ -9,6 +9,8 @@ export interface EvidenceItem {
   label: string;
   status: 'clean' | 'suspicious' | 'dead' | 'jailed' | 'cooked';
   detail: string;
+  source?: string; // Source Name or URL
+  snippet?: string; // Raw context/text found
 }
 
 export interface SocialFootprint {

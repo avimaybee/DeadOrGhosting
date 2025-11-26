@@ -11,6 +11,7 @@ interface ResultCardProps {
 export const ResultCard: React.FC<ResultCardProps> = ({ result, onReset, targetName }) => {
   const isCooked = result.cookedLevel > 50;
   const [copied, setCopied] = useState(false);
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   // Exact text requested: "#DeadOrGhosting [score] for [name] 😂"
   const shareText = `#DeadOrGhosting ${result.cookedLevel}% for ${targetName} 😂`;
@@ -84,14 +85,43 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onReset, targetN
               </p>
             </div>
 
-            {/* MAIN EVIDENCE GRID */}
-            <div className="w-full grid md:grid-cols-2 gap-4 text-left mb-6">
-              {result.evidence.map((item, idx) => (
-                <div key={idx} className="bg-white text-black p-3 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                  <h4 className="font-impact text-xl uppercase bg-black text-white inline-block px-1 mb-1">{item.label}</h4>
-                  <p className="font-mono text-sm font-bold uppercase leading-tight">{item.detail}</p>
-                </div>
-              ))}
+            {/* EVIDENCE ACCORDION */}
+            <div className="w-full mb-8 text-left">
+              <h3 className="text-hard-blue font-impact text-xl mb-2 bg-black inline-block px-1">EVIDENCE DEEP DIVE</h3>
+              <div className="space-y-3">
+                {result.evidence.map((item, idx) => {
+                  const isOpen = expandedIndex === idx;
+                  return (
+                    <div key={idx} className="border-4 border-black bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                      <button 
+                        onClick={() => setExpandedIndex(isOpen ? null : idx)}
+                        className="w-full flex justify-between items-center p-3 text-left hover:bg-zinc-100 transition-colors"
+                      >
+                        <div>
+                          <span className="font-impact text-lg uppercase mr-2 bg-black text-white px-1">{item.label}</span>
+                          <span className="font-mono text-sm font-bold uppercase">{item.detail}</span>
+                        </div>
+                        <span className="font-mono font-bold text-xl px-2">{isOpen ? '[-]' : '[+]'}</span>
+                      </button>
+                      
+                      {isOpen && (
+                        <div className="bg-black text-white p-4 font-mono text-xs border-t-4 border-black">
+                          <div className="mb-2">
+                             <span className="text-hard-gold font-bold">SOURCE: </span>
+                             <span className="text-zinc-300">{item.source || 'Unknown Source'}</span>
+                          </div>
+                          <div className="bg-zinc-900 p-2 border border-zinc-700">
+                             <span className="text-hard-concrete block mb-1">RAW DATA // SNIPPET:</span>
+                             <p className="text-green-400 font-bold font-mono whitespace-pre-wrap">
+                               "{item.snippet || 'No raw text available.'}"
+                             </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* SOCIAL FOOTPRINT / OSINT SECTION */}
@@ -154,6 +184,31 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onReset, targetN
                   >
                     <span>WHATSAPP</span>
                   </button>
+                </div>
+             </div>
+
+             {/* THERAPY NUDGE / ETHICAL FLEX */}
+             <div className="mt-6 border-4 border-dashed border-zinc-600 p-4 bg-zinc-900 relative">
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-black px-2 text-white font-impact border border-zinc-600 tracking-widest text-sm md:text-base whitespace-nowrap">
+                  EMOTIONAL DAMAGE CONTROL
+                </div>
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-2">
+                  <div className="text-center md:text-left">
+                    <h3 className="text-hard-red font-impact text-xl">NEED TO VENT?</h3>
+                    <p className="font-mono text-xs text-zinc-400">
+                      AI roasts are for fun. Mental health is real. <br/>
+                      Claim a free venting session. No judgment.
+                    </p>
+                  </div>
+                  <a 
+                    href="https://instagram.com/avimaybe" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="bg-white text-black font-bold font-mono text-sm px-4 py-2 border-2 border-black shadow-[4px_4px_0_#FF3333] hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <span>TEXT @AVIMAYBE</span>
+                    <span className="text-hard-red text-lg">❤</span>
+                  </a>
                 </div>
              </div>
           </div>

@@ -80,9 +80,27 @@ export const analyzeGhosting = async (
       "verdict": "string (Short, punchy, all-caps roast. Max 2 sentences. Use global slang or Indian-English context: 'KATA GAYA', 'SCENE OFF HAI', 'FULL IGNORE', 'TOUCH GRASS')",
       "isDead": boolean,
       "evidence": [
-        { "label": "LEGAL CHECK", "status": "clean" | "jailed", "detail": "string (E.g. 'NO E-COURT RECORDS FOUND' or 'FOUND: FIR IN BANDRA')" },
-        { "label": "OBITUARY SCAN", "status": "clean" | "dead", "detail": "string (E.g. 'NO TOI/HINDU OBITUARIES' or 'MATCH FOUND: AUG 2024')" },
-        { "label": "VIBE CHECK", "status": "clean" | "cooked", "detail": "string (brutal observation on text dryness/audacity)" }
+        { 
+          "label": "LEGAL CHECK", 
+          "status": "clean" | "jailed", 
+          "detail": "string (Summary)",
+          "source": "string (e.g., 'eCourts.gov.in' or 'Google Search')",
+          "snippet": "string (The raw text/snippet found. If nothing found, say 'No records found in public index.')"
+        },
+        { 
+          "label": "OBITUARY SCAN", 
+          "status": "clean" | "dead", 
+          "detail": "string (Summary)",
+           "source": "string (e.g., 'Times of India')",
+          "snippet": "string (Raw snippet or 'No obituary found.')"
+        },
+        { 
+          "label": "VIBE CHECK", 
+          "status": "clean" | "cooked", 
+          "detail": "string (Observation)",
+          "source": "Chat Analysis",
+          "snippet": "string (Quote specific suspicious behavior from the input)"
+        }
       ],
       "socialScan": [
          { 
@@ -127,7 +145,7 @@ export const analyzeGhosting = async (
       verdict: "SERVER CRASHED. JUST LIKE YOUR LOVE LIFE. ASSUME THE WORST.",
       isDead: false,
       evidence: [
-        { label: "ERROR", status: "cooked", detail: "AI GAVE UP" }
+        { label: "ERROR", status: "cooked", detail: "AI GAVE UP", source: "System", snippet: "Connection timeout." }
       ],
       socialScan: [],
       identifiedName: name || "UNKNOWN",
