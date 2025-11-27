@@ -164,47 +164,61 @@ export const MemeGenerator: React.FC<MemeGeneratorProps> = ({ name, score, verdi
   };
 
   return (
-    <div className="w-full bg-black border-4 border-white p-4 shadow-hard flex flex-col items-center">
-      <h3 className="text-hard-gold font-impact text-2xl mb-4 bg-black px-2 uppercase tracking-wide">
-        EVIDENCE LOCKER
-      </h3>
+    <div className="w-full h-full flex flex-col items-center justify-center p-4">
       
-      <div className="flex gap-2 mb-4 w-full">
-        <button 
-          onClick={() => setTemplate('wanted')}
-          className={`flex-1 font-bold py-2 border-2 border-white text-sm md:text-base ${template === 'wanted' ? 'bg-hard-red text-black' : 'text-white'}`}
-        >
-          WANTED
-        </button>
-        <button 
-          onClick={() => setTemplate('clown')}
-          className={`flex-1 font-bold py-2 border-2 border-white text-sm md:text-base ${template === 'clown' ? 'bg-hard-gold text-black' : 'text-white'}`}
-        >
-          CLOWN
-        </button>
-        <button 
-          onClick={() => setTemplate('grave')}
-          className={`flex-1 font-bold py-2 border-2 border-white text-sm md:text-base ${template === 'grave' ? 'bg-hard-concrete text-black' : 'text-white'}`}
-        >
-          GRAVE
-        </button>
+      {/* RETRO WINDOW CONTAINER */}
+      <div className="bg-zinc-900 border-2 border-zinc-700 shadow-2xl max-w-sm w-full">
+         
+         {/* TITLE BAR */}
+         <div className="bg-zinc-800 border-b border-zinc-700 p-1 flex justify-between items-center px-2 cursor-grab active:cursor-grabbing">
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">MEME_MAKER_V2.EXE</span>
+            <div className="flex gap-1">
+               <div className="w-3 h-3 bg-zinc-700 border border-zinc-600 flex items-center justify-center text-[8px] text-zinc-400">_</div>
+               <div className="w-3 h-3 bg-zinc-700 border border-zinc-600 flex items-center justify-center text-[8px] text-zinc-400">□</div>
+               <div className="w-3 h-3 bg-zinc-700 border border-zinc-600 flex items-center justify-center text-[8px] text-zinc-400">X</div>
+            </div>
+         </div>
+
+         <div className="p-4">
+            <div className="flex bg-zinc-800 rounded-none p-0.5 w-full mb-4 border border-zinc-700">
+                <button 
+                onClick={() => setTemplate('wanted')}
+                className={`flex-1 font-bold py-1 text-xs transition-all ${template === 'wanted' ? 'bg-zinc-600 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                >
+                WANTED
+                </button>
+                <button 
+                onClick={() => setTemplate('clown')}
+                className={`flex-1 font-bold py-1 text-xs transition-all ${template === 'clown' ? 'bg-zinc-600 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                >
+                CLOWN
+                </button>
+                <button 
+                onClick={() => setTemplate('grave')}
+                className={`flex-1 font-bold py-1 text-xs transition-all ${template === 'grave' ? 'bg-zinc-600 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                >
+                GRAVE
+                </button>
+            </div>
+
+            <div className="border border-zinc-700 mb-4 bg-black">
+                <canvas 
+                ref={canvasRef} 
+                width={400} 
+                height={500} 
+                className="max-w-full h-auto block"
+                />
+            </div>
+
+            <button 
+                onClick={downloadMeme}
+                className="w-full bg-hard-blue text-white font-impact text-lg py-2 hover:bg-blue-600 transition-colors border border-blue-900"
+            >
+                SAVE TO DISK
+            </button>
+         </div>
       </div>
 
-      <div className="border-2 border-zinc-700 bg-zinc-900 mb-4 overflow-hidden">
-        <canvas 
-          ref={canvasRef} 
-          width={400} 
-          height={500} 
-          className="max-w-full h-auto"
-        />
-      </div>
-
-      <button 
-        onClick={downloadMeme}
-        className="w-full bg-hard-blue text-black font-impact text-xl py-3 border-2 border-black hover:bg-white transition-colors"
-      >
-        DOWNLOAD EVIDENCE
-      </button>
     </div>
   );
 };

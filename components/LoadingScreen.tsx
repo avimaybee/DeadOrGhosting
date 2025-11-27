@@ -1,107 +1,63 @@
 import React, { useState, useEffect } from 'react';
 
 const LOADING_PHRASES = [
-  "PINGING THE STREETS...",
-  "CHECKING E-COURTS RECORDS...",
-  "SCANNING FIR DATABASE...",
-  "SEARCHING TIMES OF INDIA...",
-  "CALCULATING SIMP COEFFICIENT...",
-  "ASKING THE AUNTIES...",
-  "CHECKING KUNDALI MATCH...",
-  "PINGING OUIJA BOARD...",
-  "RUNNING VIBE CHECK.EXE...",
-  "SEARCHING FOR AUDACITY...",
-  "ACCESSING WHATSAPP LEAKS...",
-  "TRIANGULATING THE LIES...",
-  "STALKING SPOTIFY PLAYLISTS...",
-  "CHECKING STRAVA RUNS...",
-  "LOOKING FOR VENMO RECEIPTS...",
-  "SCANNING LINKEDIN ACTIVITY...",
-  "DECODING MIXED SIGNALS...",
-  "CHECKING TRUECALLER SPAM LIST...",
-  "ANALYZING REPLY TIMES...",
-  "CONSULTING THE ASTROLOGER..."
+  "INITIALIZING SCAN",
+  "ACCESSING PUBLIC RECORDS",
+  "TRIANGULATING SIGNALS",
+  "ANALYZING BEHAVIOR",
+  "DECODING VIBES",
+  "CHECKING ALIBIS",
+  "REVIEWING EVIDENCE"
 ];
 
 export const LoadingScreen: React.FC = () => {
   const [phrase, setPhrase] = useState(LOADING_PHRASES[0]);
   const [progress, setProgress] = useState(0);
-  const [logs, setLogs] = useState<string[]>([]);
 
   useEffect(() => {
-    // Progress bar and logs
     const interval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) return 100;
-        const jump = Math.floor(Math.random() * 5) + 1;
+        const jump = Math.floor(Math.random() * 8) + 1;
         return Math.min(prev + jump, 100);
       });
 
-      // Randomly change phrase
-      if (Math.random() > 0.7) {
+      if (Math.random() > 0.8) {
         setPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
       }
 
-      // Add "hacker" logs
-      if (Math.random() > 0.5) {
-        const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false }) + '.' + Math.floor(Math.random() * 999);
-        const newLog = `[${timestamp}] AUTH_TOKEN_RECEIVED: ${Math.random().toString(36).substring(7).toUpperCase()}`;
-        setLogs(prev => [newLog, ...prev].slice(0, 8)); // Keep last 8 logs
-      }
-
-    }, 150);
+    }, 100);
 
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center font-mono p-4">
-      {/* Background Grid/Grain is handled by body CSS, but we ensure black bg here */}
+    <div className="fixed inset-0 z-50 bg-matte-base flex flex-col items-center justify-center p-4">
       
-      <div className="w-full max-w-lg relative">
+      <div className="w-full max-w-md relative text-center">
         
-        {/* HEADER */}
-        <div className="flex justify-between items-center mb-2 border-b-2 border-hard-red pb-1">
-          <span className="text-hard-red font-bold blink">SYSTEM OVERRIDE</span>
-          <span className="text-xs text-zinc-500">CPU: {(Math.random() * 50 + 20).toFixed(1)}%</span>
+        <div className="mb-12">
+            <h1 className="text-[10rem] font-impact text-zinc-900 leading-none select-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap opacity-20 z-0">
+                LOADING
+            </h1>
+            <div className="relative z-10 text-8xl font-impact text-white">
+                {progress}%
+            </div>
         </div>
 
-        {/* MAIN VISUAL */}
-        <div className="border-4 border-white bg-zinc-900 p-6 mb-6 shadow-hard-blue relative overflow-hidden">
-          
-          {/* Animated striped background overlay */}
-          <div className="absolute inset-0 opacity-10 pointer-events-none" 
-               style={{ 
-                 backgroundImage: 'linear-gradient(45deg, #000 25%, transparent 25%, transparent 50%, #000 50%, #000 75%, transparent 75%, transparent)', 
-                 backgroundSize: '20px 20px' 
-               }}>
-          </div>
-
-          <div className="relative z-10 text-center">
-            <h2 className="text-2xl md:text-3xl font-impact text-white mb-2 animate-pulse">
-              {phrase}
-            </h2>
-            <div className="text-6xl font-impact text-hard-gold mb-4">
-              {progress}%
+        <div className="relative z-10 border-t border-zinc-800 pt-6 inline-block w-full">
+            <div className="label-sm text-zinc-500 mb-2">SYSTEM STATUS</div>
+            <div className="font-editorial text-xl text-zinc-300 animate-pulse uppercase tracking-widest">
+                {phrase}...
             </div>
-            
-            {/* PROGRESS BAR */}
-            <div className="w-full h-6 bg-black border-2 border-white relative">
-              <div 
-                className="h-full bg-hard-blue transition-all duration-100 ease-out"
+        </div>
+
+        {/* PROGRESS BAR */}
+        <div className="w-full h-1 bg-zinc-900 mt-12 relative overflow-hidden">
+            <div 
+                className="h-full bg-white transition-all duration-100 ease-out"
                 style={{ width: `${progress}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
-
-        {/* TERMINAL LOGS */}
-        <div className="bg-black border-2 border-zinc-700 p-2 font-mono text-xs h-32 overflow-hidden flex flex-col-reverse shadow-[4px_4px_0_#333]">
-          {logs.map((log, idx) => (
-            <div key={idx} className="text-green-500 whitespace-nowrap overflow-hidden text-ellipsis">
-              <span className="text-zinc-500 mr-2">{'>'}</span>{log}
-            </div>
-          ))}
+            ></div>
         </div>
 
       </div>

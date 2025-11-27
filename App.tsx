@@ -1,18 +1,217 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { analyzeGhosting } from './services/geminiService';
 import { LoadingScreen } from './components/LoadingScreen';
 import { ResultCard } from './components/ResultCard';
 import { Simulator } from './components/Simulator';
 import { AppState, GhostResult } from './types';
 
-type Tab = 'simulator' | 'investigator';
+type Module = 'standby' | 'simulator' | 'investigator';
 
+// --- VISUAL ASSETS ---
+const StarBurst = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
+  </svg>
+);
+
+const AbstractGrid = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="0.5" className={className}>
+    <path d="M0 20H100 M0 40H100 M0 60H100 M0 80H100" opacity="0.3"/>
+    <path d="M20 0V100 M40 0V100 M60 0V100 M80 0V100" opacity="0.3"/>
+    <circle cx="50" cy="50" r="30" strokeWidth="1" />
+    <path d="M50 20V80 M20 50H80" />
+  </svg>
+);
+
+const ArrowIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+    <path d="M5 12h14M12 5l7 7-7 7" />
+  </svg>
+);
+
+const CornerNodes = ({ className }: { className?: string }) => (
+  <div className={`pointer-events-none absolute inset-0 z-50 ${className}`}>
+    {/* Top Left */}
+    <div className="absolute top-0 left-0">
+      <div className="w-2 h-2 border-t border-l border-zinc-500"></div>
+      <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 text-zinc-600 text-[8px]">+</div>
+    </div>
+    {/* Top Right */}
+    <div className="absolute top-0 right-0">
+       <div className="w-2 h-2 border-t border-r border-zinc-500"></div>
+       <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 text-zinc-600 text-[8px]">+</div>
+    </div>
+    {/* Bottom Left */}
+    <div className="absolute bottom-0 left-0">
+       <div className="w-2 h-2 border-b border-l border-zinc-500"></div>
+       <div className="absolute bottom-0 left-0 -translate-x-1/2 translate-y-1/2 text-zinc-600 text-[8px]">+</div>
+    </div>
+    {/* Bottom Right */}
+    <div className="absolute bottom-0 right-0">
+       <div className="w-2 h-2 border-b border-r border-zinc-500"></div>
+       <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 text-zinc-600 text-[8px]">+</div>
+    </div>
+  </div>
+);
+
+const SystemTicker = () => (
+  <div className="w-full bg-black border-t border-zinc-800 py-1 overflow-hidden shrink-0 flex items-center relative z-50">
+    <div className="whitespace-nowrap animate-marquee flex gap-8">
+      {[...Array(5)].map((_, i) => (
+        <React.Fragment key={i}>
+          <span className="font-mono text-[9px] text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-2">
+             <span className="w-1 h-1 bg-red-500 rounded-full animate-pulse"></span>
+             SYSTEM: ONLINE
+          </span>
+          <span className="font-mono text-[9px] text-zinc-500 uppercase tracking-[0.2em]">
+             // TARGET: LOCKED
+          </span>
+          <span className="font-mono text-[9px] text-zinc-500 uppercase tracking-[0.2em]">
+             // DETECTING LIES
+          </span>
+          <span className="font-mono text-[9px] text-zinc-500 uppercase tracking-[0.2em]">
+             // PROTOCOL: ROAST
+          </span>
+          <span className="font-mono text-[9px] text-zinc-500 uppercase tracking-[0.2em] text-hard-gold">
+             *** DO NOT TEXT BACK ***
+          </span>
+        </React.Fragment>
+      ))}
+    </div>
+  </div>
+);
+
+// --- COMPONENT: SIDE DOCK ---
+const SideDock = ({ activeModule, setModule }: { activeModule: Module, setModule: (m: Module) => void }) => {
+  return (
+    <div className="w-16 md:w-20 border-r border-zinc-800 bg-matte-base flex flex-col items-center py-6 z-50 h-full relative">
+      <div className="mb-10">
+        <StarBurst className="w-6 h-6 text-white animate-spin-slow" />
+      </div>
+      
+      <div className="flex-1 flex flex-col gap-8 w-full px-2">
+        <DockItem 
+          active={activeModule === 'standby'} 
+          onClick={() => setModule('standby')}
+          label="SYS"
+          index="01"
+        />
+        <DockItem 
+          active={activeModule === 'investigator'} 
+          onClick={() => setModule('investigator')}
+          label="SCAN"
+          index="02"
+        />
+        <DockItem 
+          active={activeModule === 'simulator'} 
+          onClick={() => setModule('simulator')}
+          label="SIM"
+          index="03"
+        />
+      </div>
+
+      <div className="mt-auto flex flex-col items-center gap-4 text-[9px] font-mono text-zinc-600">
+        <div className="writing-vertical-lr tracking-widest uppercase opacity-30 hover:opacity-100 transition-opacity cursor-default">
+            THE BLOCK V3.1
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const DockItem = ({ active, onClick, label, index }: { active: boolean, onClick: () => void, label: string, index: string }) => (
+  <button 
+    onClick={onClick}
+    className="w-full flex flex-col items-center justify-center gap-1 group relative"
+  >
+    <div className={`w-1 h-1 rounded-full mb-2 transition-all duration-300 ${active ? 'bg-hard-gold w-1.5 h-1.5' : 'bg-zinc-800 group-hover:bg-zinc-600'}`}></div>
+    <span className={`text-[10px] font-bold tracking-widest relative z-10 writing-vertical-lr py-2 transition-colors ${active ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400'}`}>
+        {label}
+    </span>
+    <span className="absolute -right-2 top-0 text-[8px] text-zinc-800 font-mono opacity-0 group-hover:opacity-100 transition-opacity">{index}</span>
+  </button>
+);
+
+// --- COMPONENT: STANDBY SCREEN (EDITORIAL) ---
+const StandbyScreen = ({ onActivate }: { onActivate: (m: Module) => void }) => (
+  <div className="h-full w-full flex flex-col relative overflow-hidden bg-matte-base">
+    
+    {/* Background Decor */}
+    <div className="absolute top-0 right-0 w-[50%] h-full border-l border-zinc-900/50 hidden md:block"></div>
+    <AbstractGrid className="absolute bottom-[-10%] left-[-10%] w-[40vw] h-[40vw] text-zinc-800 opacity-20 pointer-events-none animate-spin-slow" />
+
+    {/* CONTENT GRID */}
+    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 h-full">
+        
+        {/* LEFT: HERO */}
+        <div className="p-8 md:p-16 flex flex-col justify-center relative z-10 border-b md:border-b-0 md:border-r border-zinc-800">
+            <div className="mb-8">
+                <span className="label-sm text-hard-gold mb-2 block">RELATIONSHIP FORENSICS UNIT</span>
+                <h1 className="text-[5rem] md:text-[8rem] lg:text-[10rem] leading-[0.8] font-impact text-white mb-6">
+                    THE<br/>BLOCK
+                </h1>
+                <p className="text-zinc-500 max-w-sm text-sm leading-relaxed font-editorial">
+                    Advanced algorithmic analysis for modern ghosting phenomena. 
+                    Identify patterns, predict outcomes, and restore dignity.
+                </p>
+            </div>
+            
+            {/* AURA PILL */}
+            <div className="flex items-center gap-4">
+                <div className="h-12 px-6 rounded-full bg-zinc-900 border border-zinc-800 flex items-center gap-3 relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-red-500/10 animate-pulse-glow"></div>
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse relative z-10"></div>
+                    <span className="font-mono text-xs text-zinc-300 relative z-10 tracking-widest">SYSTEM_ONLINE</span>
+                </div>
+                <StarBurst className="w-8 h-8 text-zinc-800" />
+            </div>
+        </div>
+
+        {/* RIGHT: MODULE SELECTOR */}
+        <div className="flex flex-col">
+            <button 
+                onClick={() => onActivate('investigator')}
+                className="flex-1 border-b border-zinc-800 p-8 md:p-12 text-left hover:bg-zinc-900/50 transition-all group relative overflow-hidden flex flex-col justify-center"
+            >
+                <div className="absolute right-8 top-8 opacity-0 group-hover:opacity-100 transition-all duration-500">
+                    <ArrowIcon className="w-12 h-12 text-hard-gold -rotate-45" />
+                </div>
+                <div className="label-sm text-zinc-500 group-hover:text-hard-gold transition-colors mb-2">MODULE 01</div>
+                <h2 className="text-5xl md:text-6xl font-impact text-zinc-300 group-hover:text-white transition-colors uppercase">
+                    Investigator
+                </h2>
+                <div className="mt-4 opacity-50 group-hover:opacity-100 transition-opacity max-w-md text-xs font-mono text-zinc-400">
+                    // RUN DIAGNOSTICS. DETECT LIES.
+                </div>
+            </button>
+
+            <button 
+                onClick={() => onActivate('simulator')}
+                className="flex-1 p-8 md:p-12 text-left hover:bg-zinc-900/50 transition-all group relative overflow-hidden flex flex-col justify-center"
+            >
+                <div className="absolute right-8 top-8 opacity-0 group-hover:opacity-100 transition-all duration-500">
+                    <ArrowIcon className="w-12 h-12 text-hard-blue -rotate-45" />
+                </div>
+                <div className="label-sm text-zinc-500 group-hover:text-hard-blue transition-colors mb-2">MODULE 02</div>
+                <h2 className="text-5xl md:text-6xl font-impact text-zinc-300 group-hover:text-white transition-colors uppercase">
+                    Simulator
+                </h2>
+                <div className="mt-4 opacity-50 group-hover:opacity-100 transition-opacity max-w-md text-xs font-mono text-zinc-400">
+                    // TEST SCENARIOS. PREVENT CRINGE.
+                </div>
+            </button>
+        </div>
+    </div>
+  </div>
+);
+
+// --- MAIN APP COMPONENT ---
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('simulator');
+  const [activeModule, setActiveModule] = useState<Module>('standby');
   const [state, setState] = useState<AppState>('landing');
   
   // Investigator State
-  const [mode, setMode] = useState<'text' | 'screenshot'>('screenshot');
+  const [investigateMode, setInvestigateMode] = useState<'text' | 'screenshot'>('screenshot');
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [lastMessage, setLastMessage] = useState('');
@@ -39,23 +238,17 @@ function App() {
     }
   };
 
-  const removeScreenshot = (index: number) => {
-    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
-    setScreenshots(prev => prev.filter((_, i) => i !== index));
-  };
-
   const handleSubmitInvestigation = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mode === 'text' && !name) return;
-    if (mode === 'screenshot' && screenshots.length === 0) return;
-    if (mode === 'text' && !lastMessage) return;
-
+    if (investigateMode === 'text' && !name) return;
+    if (investigateMode === 'screenshot' && screenshots.length === 0) return;
+    
     setState('loading');
     
     try {
       const [_, data] = await Promise.all([
         new Promise(resolve => setTimeout(resolve, 3000)),
-        analyzeGhosting(name, city, lastMessage, mode === 'screenshot' ? screenshots : undefined)
+        analyzeGhosting(name, city, lastMessage, investigateMode === 'screenshot' ? screenshots : undefined)
       ]);
       setResult(data);
       setState('results');
@@ -75,244 +268,184 @@ function App() {
     setCity('');
   };
 
-  const hasScreenshots = mode === 'screenshot' && screenshots.length > 0;
+  const hasScreenshots = investigateMode === 'screenshot' && screenshots.length > 0;
 
   return (
-    <div className="min-h-screen bg-grain bg-hard-black text-white font-mono selection:bg-hard-gold selection:text-black">
+    <div className="flex h-screen w-screen bg-matte-base text-zinc-100 overflow-hidden font-sans selection:bg-white selection:text-black">
       
-      {/* HEADER / HUD */}
-      <header className="fixed top-0 left-0 w-full z-40 border-b-4 border-white bg-black p-2 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-hard-red animate-pulse"></div>
-          <div className="flex flex-col">
-             <h1 className="text-xl md:text-2xl font-impact tracking-wide text-white leading-none">THE BLOCK v3.0</h1>
-             <span className="text-[10px] text-hard-blue font-bold tracking-widest">POWERED BY UNSEND SENTINEL</span>
-          </div>
-        </div>
-        <div className="font-mono text-xs md:text-sm text-hard-gold hidden md:block">
-          CONNECTED: 127.0.0.1 // SECURE
-        </div>
-      </header>
-
-      <main className="pt-24 pb-10 px-4 min-h-screen flex flex-col items-center justify-start relative">
+      <SideDock activeModule={activeModule} setModule={setActiveModule} />
+      
+      {/* MAIN CONTAINER */}
+      <div className="flex-1 relative h-full flex flex-col p-2 md:p-4 overflow-hidden">
         
-        {state === 'loading' && <LoadingScreen />}
+        {/* VIEWPORT FRAME */}
+        <div className="relative w-full h-full border border-zinc-800 bg-black/20 overflow-hidden flex flex-col shadow-2xl">
+            <CornerNodes />
 
-        {/* MODE SWITCHER */}
-        {state !== 'loading' && state !== 'results' && (
-          <div className="w-full max-w-5xl mb-8 flex border-4 border-black bg-black shadow-hard-white">
-            <button
-              onClick={() => setActiveTab('simulator')}
-              className={`flex-1 py-4 font-impact text-xl md:text-2xl tracking-wide transition-all ${
-                activeTab === 'simulator' 
-                  ? 'bg-hard-blue text-black' 
-                  : 'bg-zinc-900 text-zinc-500 hover:text-white hover:bg-zinc-800'
-              }`}
-            >
-              UNSEND SIMULATOR
-            </button>
-            <button
-              onClick={() => setActiveTab('investigator')}
-              className={`flex-1 py-4 font-impact text-xl md:text-2xl tracking-wide transition-all ${
-                activeTab === 'investigator' 
-                  ? 'bg-hard-gold text-black' 
-                  : 'bg-zinc-900 text-zinc-500 hover:text-white hover:bg-zinc-800'
-              }`}
-            >
-              GHOST INVESTIGATOR
-            </button>
-          </div>
-        )}
+            {state === 'loading' && <LoadingScreen />}
 
-        {/* --- SIMULATOR TAB CONTENT --- */}
-        {activeTab === 'simulator' && state === 'landing' && (
-          <div className="w-full flex flex-col items-center animate-fadeIn">
-            <div className="text-center mb-8 max-w-2xl">
-              <h2 className="text-4xl md:text-6xl font-impact text-white text-outline mb-2">
-                STOP. DON'T SEND IT.
-              </h2>
-              <p className="text-hard-concrete text-lg font-bold">
-                Paste your draft. AI calculates the regret, fixes the cringe, and saves your dignity.
-              </p>
-            </div>
-            <Simulator onPivotToInvestigator={() => setActiveTab('investigator')} />
-          </div>
-        )}
-
-        {/* --- INVESTIGATOR TAB CONTENT --- */}
-        {activeTab === 'investigator' && (
-          <>
-            {state === 'results' && result && (
-              <ResultCard 
-                result={result} 
-                onReset={resetInvestigation} 
-                targetName={result.identifiedName || name || "UNKNOWN"} 
-              />
+            {/* STANDBY MODULE */}
+            {activeModule === 'standby' && (
+                <StandbyScreen onActivate={setActiveModule} />
             )}
 
-            {state === 'error' && (
-              <div className="bg-red-900 border-4 border-red-500 p-8 text-center max-w-lg shadow-[8px_8px_0_#ff0000]">
-                <h2 className="text-4xl font-impact mb-4">SYSTEM CRASH</h2>
-                <p className="font-mono mb-6">THE STREETS ARE TOO BUSY. TRY AGAIN.</p>
-                <button onClick={resetInvestigation} className="bg-white text-black font-bold py-2 px-6 hover:bg-gray-200">RESET</button>
-              </div>
+            {/* SIMULATOR MODULE */}
+            {activeModule === 'simulator' && (
+                <div className="h-full w-full flex flex-col animate-fade-in bg-matte-base">
+                    <Simulator onPivotToInvestigator={() => setActiveModule('investigator')} />
+                </div>
             )}
 
-            {state === 'landing' && (
-              <div className="w-full max-w-5xl grid md:grid-cols-2 gap-8 items-start animate-fadeIn">
+            {/* INVESTIGATOR MODULE */}
+            {activeModule === 'investigator' && (
+                <div className="h-full w-full flex flex-col animate-fade-in bg-matte-base">
                 
-                {/* HERO TEXT (LEFT) */}
-                <div className="text-left space-y-4 pt-4">
-                  <div className="inline-block bg-hard-gold text-black px-2 font-bold transform -rotate-2 border border-black shadow-sm">
-                    REALITY CHECK TOOL
-                  </div>
-                  <h2 className="text-5xl md:text-7xl font-impact text-white leading-[0.85] text-outline drop-shadow-[8px_8px_0_rgba(255,215,0,1)]">
-                    DEAD<br/>OR<br/>GHOSTING
-                  </h2>
-                  <p className="text-hard-concrete text-xl font-bold max-w-md">
-                    Already sent it? Find out if they're actually deceased or just playing you.
-                  </p>
-                  
-                  <div className="flex gap-4 pt-4">
-                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border-4 border-black shadow-hard-blue text-xl animate-bounce" style={{ animationDelay: '0s' }}>💀</div>
-                    <div className="w-12 h-12 bg-hard-gold rounded-full flex items-center justify-center border-4 border-black shadow-hard text-xl animate-bounce" style={{ animationDelay: '0.1s' }}>💰</div>
-                    <div className="w-12 h-12 bg-hard-blue rounded-full flex items-center justify-center border-4 border-black shadow-hard-red text-xl animate-bounce" style={{ animationDelay: '0.2s' }}>🧢</div>
-                  </div>
-                </div>
+                {state === 'landing' && (
+                    <div className="h-full flex items-center justify-center p-6 relative">
+                        {/* Background Topo */}
+                        <div className="absolute inset-0 bg-topo-pattern opacity-10 pointer-events-none"></div>
 
-                {/* INTERACTION PANEL (RIGHT) */}
-                <div className="bg-hard-gray border-4 border-white shadow-hard relative group">
-                  <div className="bg-white text-black p-2 font-impact text-xl border-b-4 border-black flex justify-between">
-                    <span>NEW INVESTIGATION</span>
-                    <span className="animate-pulse">▼</span>
-                  </div>
-                  
-                  <div className="p-6">
-                    {/* TABS */}
-                    <div className="flex border-4 border-black mb-6 bg-black">
-                      <button 
-                        onClick={() => setMode('screenshot')}
-                        className={`flex-1 py-3 font-impact text-xl transition-all ${mode === 'screenshot' ? 'bg-hard-gold text-black' : 'text-zinc-500 hover:text-white'}`}
-                      >
-                        SCREENSHOTS
-                      </button>
-                      <button 
-                        onClick={() => setMode('text')}
-                        className={`flex-1 py-3 font-impact text-xl transition-all ${mode === 'text' ? 'bg-hard-red text-black' : 'text-zinc-500 hover:text-white'}`}
-                      >
-                        PASTE TEXT
-                      </button>
-                    </div>
-
-                    <form onSubmit={handleSubmitInvestigation} className="space-y-4">
-                      
-                      {mode === 'screenshot' ? (
-                        <div className="space-y-2">
-                          <div 
-                            onClick={() => fileInputRef.current?.click()}
-                            className="border-4 border-dashed border-zinc-600 bg-black min-h-[120px] p-4 flex flex-col items-center justify-center cursor-pointer hover:border-hard-gold transition-colors group/upload relative overflow-hidden"
-                          >
-                             {/* Stripe animation overlay */}
-                            <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,215,0,0.05)_25%,rgba(255,215,0,0.05)_50%,transparent_50%,transparent_75%,rgba(255,215,0,0.05)_75%,rgba(255,215,0,0.05)_100%)] bg-[size:20px_20px] opacity-0 group-hover/upload:opacity-100 transition-opacity pointer-events-none animate-[scan_1s_linear_infinite]"></div>
-                            
-                            <input 
-                              type="file" 
-                              multiple 
-                              accept="image/*"
-                              ref={fileInputRef}
-                              className="hidden"
-                              onChange={handleFileChange}
-                            />
-                            <span className="text-4xl mb-2 group-hover/upload:scale-110 transition-transform">📂</span>
-                            <span className="font-impact text-xl text-zinc-400 group-hover/upload:text-white uppercase">CLICK TO UPLOAD EVIDENCE</span>
-                            <span className="font-mono text-xs text-zinc-500">(Supports multiple screenshots)</span>
-                          </div>
-                          
-                          {/* PREVIEW GRID */}
-                          {previewUrls.length > 0 && (
-                            <div className="grid grid-cols-3 gap-2">
-                              {previewUrls.map((url, idx) => (
-                                <div key={idx} className="relative aspect-square border-2 border-zinc-700 group/img">
-                                  <img src={url} alt="Preview" className="w-full h-full object-cover opacity-70 group-hover/img:opacity-100 transition-opacity" />
-                                  <button 
-                                    type="button"
-                                    onClick={() => removeScreenshot(idx)} 
-                                    className="absolute top-0 right-0 bg-red-600 text-white w-6 h-6 flex items-center justify-center font-bold hover:bg-red-500 z-10"
-                                  >
-                                    ×
-                                  </button>
+                        <div className="w-full max-w-5xl bg-zinc-900 border border-zinc-800 shadow-2xl relative overflow-hidden group">
+                             <CornerNodes className="opacity-50" />
+                            <div className="grid md:grid-cols-2 h-full min-h-[500px]">
+                                {/* Left Panel */}
+                                <div className="p-10 border-r border-zinc-800 flex flex-col justify-between bg-zinc-900 relative">
+                                    <div className="absolute inset-0 bg-scan-lines opacity-10 pointer-events-none"></div>
+                                    <div className="relative z-10">
+                                        <div className="label-sm text-hard-gold mb-4 border border-zinc-700 w-fit px-2 py-1 flex items-center gap-2">
+                                          <div className="w-1.5 h-1.5 bg-hard-gold animate-pulse"></div>
+                                          CASE FILE #001
+                                        </div>
+                                        <h2 className="text-5xl font-impact text-white mb-6 leading-none">INITIATE<br/>SCAN</h2>
+                                        <p className="text-zinc-400 text-sm font-editorial leading-relaxed max-w-sm">
+                                            Upload chat logs or manually input data to run a full forensic analysis. The truth hurts, but ambiguity kills.
+                                        </p>
+                                    </div>
+                                    <div className="space-y-4 mt-12 relative z-10">
+                                        <button 
+                                            onClick={() => setInvestigateMode('screenshot')}
+                                            className={`w-full p-4 border text-left transition-all relative group ${investigateMode === 'screenshot' ? 'bg-white text-black border-white' : 'border-zinc-700 text-zinc-500 hover:border-zinc-500'}`}
+                                        >
+                                            <div className="flex justify-between items-center mb-1">
+                                                <div className="font-bold text-xs uppercase tracking-wider">Method A: OCR</div>
+                                                {investigateMode === 'screenshot' && <StarBurst className="w-4 h-4" />}
+                                            </div>
+                                            <div className={`text-[10px] uppercase tracking-widest ${investigateMode === 'screenshot' ? 'opacity-100' : 'opacity-50'}`}>Upload Evidence</div>
+                                        </button>
+                                        <button 
+                                            onClick={() => setInvestigateMode('text')}
+                                            className={`w-full p-4 border text-left transition-all relative group ${investigateMode === 'text' ? 'bg-white text-black border-white' : 'border-zinc-700 text-zinc-500 hover:border-zinc-500'}`}
+                                        >
+                                            <div className="flex justify-between items-center mb-1">
+                                                <div className="font-bold text-xs uppercase tracking-wider">Method B: Manual</div>
+                                                {investigateMode === 'text' && <StarBurst className="w-4 h-4" />}
+                                            </div>
+                                            <div className={`text-[10px] uppercase tracking-widest ${investigateMode === 'text' ? 'opacity-100' : 'opacity-50'}`}>Input Text</div>
+                                        </button>
+                                    </div>
                                 </div>
-                              ))}
+
+                                {/* Right Form */}
+                                <div className="p-10 flex flex-col justify-center bg-zinc-900/50">
+                                    <form onSubmit={handleSubmitInvestigation} className="space-y-6">
+                                        {investigateMode === 'screenshot' ? (
+                                            <div 
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="border border-dashed border-zinc-700 bg-zinc-900/50 h-48 flex flex-col items-center justify-center cursor-pointer hover:border-white transition-all group relative overflow-hidden"
+                                            >
+                                            {previewUrls.length > 0 ? (
+                                                <div className="absolute inset-0 p-4 flex gap-2 overflow-x-auto items-center bg-black/80">
+                                                    {previewUrls.map((url, i) => (
+                                                        <img key={i} src={url} className="h-full border border-zinc-700" />
+                                                    ))}
+                                                    <div className="h-12 w-12 flex items-center justify-center bg-zinc-800 text-white font-bold">+</div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                <div className="w-12 h-12 bg-zinc-800 flex items-center justify-center mb-3 group-hover:bg-white group-hover:text-black transition-colors">
+                                                    <span className="text-xl">↓</span>
+                                                </div>
+                                                <span className="label-sm">DROP SCREENSHOTS</span>
+                                                </>
+                                            )}
+                                            <input 
+                                                type="file" 
+                                                multiple 
+                                                accept="image/*"
+                                                ref={fileInputRef}
+                                                className="hidden"
+                                                onChange={handleFileChange}
+                                            />
+                                            </div>
+                                        ) : (
+                                            <textarea
+                                            required
+                                            placeholder="PASTE THE LAST MESSAGE..."
+                                            className="w-full bg-zinc-900 border border-zinc-700 p-4 text-white focus:border-white focus:outline-none h-48 resize-none font-mono text-xs uppercase placeholder-zinc-700"
+                                            value={lastMessage}
+                                            onChange={e => setLastMessage(e.target.value)}
+                                            />
+                                        )}
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <input 
+                                            type="text" 
+                                            required={!hasScreenshots}
+                                            placeholder="TARGET NAME"
+                                            className="bg-zinc-900 border border-zinc-700 p-3 text-white focus:border-white focus:outline-none text-xs font-mono uppercase"
+                                            value={name}
+                                            onChange={e => setName(e.target.value)}
+                                            />
+                                            <input 
+                                            type="text" 
+                                            required={!hasScreenshots}
+                                            placeholder="CITY"
+                                            className="bg-zinc-900 border border-zinc-700 p-3 text-white focus:border-white focus:outline-none text-xs font-mono uppercase"
+                                            value={city}
+                                            onChange={e => setCity(e.target.value)}
+                                            />
+                                        </div>
+
+                                        <button 
+                                        type="submit"
+                                        className="w-full bg-white text-black font-impact text-2xl py-4 hover:bg-zinc-200 transition-all uppercase tracking-wide border border-white"
+                                        >
+                                        Run Diagnostic
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
-                          )}
                         </div>
-                      ) : (
-                        <div>
-                           <label className="text-sm text-zinc-400 font-bold mb-1 block tracking-wider">CONTEXT / LAST MESSAGE</label>
-                          <textarea
-                            required
-                            placeholder='EX: "I said: I love you. They said: K."'
-                            className="w-full bg-black border-2 border-zinc-500 p-3 text-white focus:border-hard-red focus:outline-none min-h-[120px] placeholder-zinc-600 font-mono text-sm"
-                            value={lastMessage}
-                            onChange={e => setLastMessage(e.target.value)}
-                          />
-                        </div>
-                      )}
+                    </div>
+                )}
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-sm text-hard-gold font-bold mb-1 block tracking-wider drop-shadow-md">
-                            THEIR NAME {hasScreenshots && <span className="text-white text-[10px] ml-1 opacity-70">(AUTO)</span>}
-                          </label>
-                          <input 
-                            type="text" 
-                            required={!hasScreenshots}
-                            placeholder={hasScreenshots ? "AI DETECT" : "EX: ADITYA"}
-                            className={`w-full bg-black border-2 p-3 text-white focus:outline-none uppercase font-bold transition-colors ${hasScreenshots ? 'border-hard-gold/50 placeholder-hard-gold/50' : 'border-zinc-500 focus:border-hard-gold placeholder-zinc-600'}`}
-                            value={name}
-                            onChange={e => setName(e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <label className="text-sm text-hard-blue font-bold mb-1 block tracking-wider drop-shadow-md">
-                            THEIR CITY {hasScreenshots && <span className="text-white text-[10px] ml-1 opacity-70">(AUTO)</span>}
-                          </label>
-                          <input 
-                            type="text" 
-                            required={!hasScreenshots}
-                            placeholder={hasScreenshots ? "AI DETECT" : "EX: MUMBAI"}
-                            className={`w-full bg-black border-2 p-3 text-white focus:outline-none uppercase font-bold transition-colors ${hasScreenshots ? 'border-hard-blue/50 placeholder-hard-blue/50' : 'border-zinc-500 focus:border-hard-blue placeholder-zinc-600'}`}
-                            value={city}
-                            onChange={e => setCity(e.target.value)}
-                          />
-                        </div>
-                      </div>
+                {state === 'results' && result && (
+                    <div className="h-full w-full overflow-hidden p-2 md:p-6 bg-matte-base">
+                        <ResultCard 
+                        result={result} 
+                        onReset={resetInvestigation} 
+                        targetName={result.identifiedName || name || "UNKNOWN"} 
+                        />
+                    </div>
+                )}
 
-                      <button 
-                        type="submit"
-                        className="w-full bg-white text-black font-impact text-3xl py-4 border-4 border-transparent hover:border-black hover:bg-hard-gold transition-all shadow-hard-white uppercase mt-4 active:translate-y-1 active:shadow-none"
-                      >
-                        START INVESTIGATION
-                      </button>
-                    </form>
-                  </div>
-                  
-                  {/* Decorative corners */}
-                  <div className="absolute -top-1 -left-1 w-3 h-3 bg-white border border-black"></div>
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-white border border-black"></div>
-                  <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-white border border-black"></div>
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white border border-black"></div>
+                {state === 'error' && (
+                    <div className="flex h-full items-center justify-center">
+                    <div className="bg-zinc-900 border border-red-900 p-10 text-center max-w-lg">
+                        <h2 className="text-4xl font-impact text-red-600 mb-2">SYSTEM ERROR</h2>
+                        <p className="font-mono text-zinc-500 mb-6 text-sm">CONNECTION DROPPED.</p>
+                        <button onClick={resetInvestigation} className="bg-white text-black font-bold py-3 px-8 hover:bg-zinc-200 uppercase tracking-widest text-xs">Reboot</button>
+                    </div>
+                    </div>
+                )}
                 </div>
-              </div>
             )}
-          </>
-        )}
+        </div>
+        
+        {/* SYSTEM TICKER */}
+        <SystemTicker />
 
-      </main>
-
-      <footer className="fixed bottom-0 w-full text-center p-2 text-[10px] md:text-xs text-zinc-600 font-mono uppercase bg-black border-t border-zinc-900 z-30">
-        THE BLOCK v3.0 // POWERED BY UNSEND SENTINEL // FREE FOREVER
-      </footer>
+      </div>
     </div>
   );
 }

@@ -8,12 +8,27 @@ interface ResultCardProps {
   targetName: string;
 }
 
+// Visual Assets
+const WireframeGlobe = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="0.5" className={className}>
+    <circle cx="50" cy="50" r="48" />
+    <ellipse cx="50" cy="50" rx="48" ry="20" />
+    <ellipse cx="50" cy="50" rx="48" ry="35" transform="rotate(45 50 50)" />
+    <ellipse cx="50" cy="50" rx="48" ry="35" transform="rotate(-45 50 50)" />
+    <path d="M50 2v96" />
+    <path d="M2 50h96" />
+  </svg>
+);
+
+const PanelCorner = () => (
+    <div className="absolute top-1 right-1 text-zinc-700 text-[8px]">+</div>
+);
+
 export const ResultCard: React.FC<ResultCardProps> = ({ result, onReset, targetName }) => {
   const isCooked = result.cookedLevel > 50;
   const [copied, setCopied] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
-  // Exact text requested: "#DeadOrGhosting [score] for [name] 😂"
   const shareText = `#DeadOrGhosting ${result.cookedLevel}% for ${targetName} 😂`;
   const shareUrl = "https://deadorghosting.lol";
 
@@ -35,191 +50,171 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onReset, targetN
   };
   
   return (
-    <div className="w-full max-w-4xl flex flex-col md:flex-row gap-6 relative pb-20">
-      
-      {/* LEFT COLUMN: RESULT CARD */}
-      <div className="w-full md:w-2/3">
-        <div className="bg-hard-gold text-black font-impact text-2xl px-4 py-2 flex justify-between items-center border-b-4 border-black">
-          <span>MISSION REPORT</span>
-          <span>ID: {Math.floor(Math.random() * 99999)}</span>
-        </div>
-
-        <div className="bg-hard-gray border-4 border-black p-6 md:p-10 relative overflow-hidden shadow-hard-white">
+    <div className="h-full w-full overflow-y-auto custom-scrollbar bg-black p-1">
+      {/* MATTE BENTO GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-1 auto-rows-min bg-black border border-black">
+        
+        {/* 1. MAIN VERDICT CARD (Solid Matte) */}
+        <div className="md:col-span-2 lg:col-span-2 row-span-2 bg-matte-panel relative flex flex-col justify-between min-h-[350px] overflow-hidden group">
+          <PanelCorner />
           
-          {/* Background Watermark */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-            <span className="font-impact text-[200px] text-white">
-              {isCooked ? "L" : "W"}
-            </span>
+          {/* FLOATING VERDICT PILL */}
+          <div className="absolute top-6 right-6 z-20">
+             <div className={`px-4 py-2 rounded-full border ${isCooked ? 'bg-red-500/10 border-red-500 text-red-500' : 'bg-green-500/10 border-green-500 text-green-500'} flex items-center gap-2 backdrop-blur-md shadow-lg`}>
+                <div className={`w-2 h-2 rounded-full ${isCooked ? 'bg-red-500' : 'bg-green-500'} animate-pulse`}></div>
+                <span className="label-sm text-current">{isCooked ? 'TERMINAL' : 'ACTIVE'}</span>
+             </div>
           </div>
 
-          <div className="relative z-10 flex flex-col items-center text-center">
-            
-            <div className="mb-6 border-2 border-white px-4 py-1 bg-black">
-              <h2 className="text-hard-gold font-mono text-xl uppercase tracking-widest">
-                TARGET: {targetName}
-              </h2>
-            </div>
+          <div className="p-8 relative z-10 flex-1 flex flex-col justify-center">
+             <div className="label-sm text-zinc-500 mb-2">Subject Analysis</div>
+             <h1 className="text-4xl font-impact text-white mb-1 uppercase tracking-wider">{targetName}</h1>
+             
+             <div className="mt-8">
+                 <h2 className={`text-[6rem] md:text-[8rem] font-impact leading-[0.8] ${isCooked ? 'text-hard-red' : 'text-hard-blue'} uppercase`}>
+                    {isCooked ? "WASTED" : "ALIVE"}
+                 </h2>
+                 <p className="text-lg font-editorial text-zinc-300 mt-4 max-w-md leading-relaxed border-l-2 border-zinc-700 pl-4">
+                   {result.verdict}
+                 </p>
+             </div>
+          </div>
 
-            <h1 className={`text-7xl md:text-8xl lg:text-9xl font-impact leading-none mb-4 text-outline tracking-tighter ${isCooked ? 'text-hard-red' : 'text-hard-blue'}`}>
-              {isCooked ? "WASTED" : "RESPECT"}
-            </h1>
-
-            <div className="w-full max-w-lg bg-black border-2 border-white p-1 mb-8">
-              <div className="h-6 w-full bg-gray-900 relative">
+          {/* PROGRESS FOOTER */}
+          <div className="p-8 border-t border-zinc-800 bg-zinc-900/50">
+             <div className="flex justify-between items-end mb-2">
+                <span className="label-sm text-zinc-500">PROBABILITY</span>
+                <span className="font-mono text-xl text-white font-bold">{result.cookedLevel}%</span>
+             </div>
+             <div className="w-full h-4 bg-black border border-zinc-800 p-0.5">
                 <div 
-                  className={`h-full ${isCooked ? 'bg-hard-red' : 'bg-hard-gold'}`}
-                  style={{ width: `${result.cookedLevel}%` }}
-                />
-              </div>
-              <div className="flex justify-between text-white font-mono text-xs mt-1 px-1">
-                <span>SAFE</span>
-                <span>DAMAGE: {result.cookedLevel}%</span>
-                <span>CRITICAL</span>
-              </div>
-            </div>
+                   className={`h-full ${isCooked ? 'bg-hard-red' : 'bg-green-500'} bg-[length:4px_4px] bg-[linear-gradient(45deg,rgba(0,0,0,0.2)25%,transparent_25%,transparent_50%,rgba(0,0,0,0.2)50%,rgba(0,0,0,0.2)75%,transparent_75%,transparent)]`} 
+                   style={{ width: `${result.cookedLevel}%` }}
+                ></div>
+             </div>
+          </div>
+        </div>
 
-            <div className="bg-black/80 border border-hard-gold p-6 w-full mb-8 transform rotate-1">
-              <p className="font-impact text-2xl md:text-3xl text-white uppercase leading-tight tracking-wide">
-                "{result.verdict}"
-              </p>
-            </div>
-
-            {/* EVIDENCE ACCORDION */}
-            <div className="w-full mb-8 text-left">
-              <h3 className="text-hard-blue font-impact text-xl mb-2 bg-black inline-block px-1">EVIDENCE DEEP DIVE</h3>
+        {/* 2. ACTIONS CARD */}
+        <div className="bg-matte-panel p-6 flex flex-col justify-between md:col-span-1 border-l border-black relative">
+           <PanelCorner />
+           <div>
+              <h3 className="label-sm text-zinc-500 mb-6">Protocol Options</h3>
               <div className="space-y-3">
-                {result.evidence.map((item, idx) => {
+                <button onClick={onReset} className="w-full text-left group">
+                   <div className="text-2xl font-impact text-zinc-400 group-hover:text-white transition-colors uppercase">NEW SCAN</div>
+                   <div className="h-px w-full bg-zinc-800 group-hover:bg-hard-gold transition-colors mt-1"></div>
+                </button>
+                <button onClick={handleCopy} className="w-full text-left group">
+                   <div className="text-2xl font-impact text-zinc-400 group-hover:text-white transition-colors uppercase">{copied ? "COPIED!" : "SHARE URL"}</div>
+                   <div className="h-px w-full bg-zinc-800 group-hover:bg-hard-blue transition-colors mt-1"></div>
+                </button>
+              </div>
+           </div>
+           <div className="flex gap-1 mt-6">
+              <button onClick={handleTwitterShare} className="flex-1 h-10 bg-zinc-800 hover:bg-white hover:text-black text-white font-bold text-xs uppercase transition-colors">X / TWITTER</button>
+              <button onClick={handleWhatsappShare} className="flex-1 h-10 bg-zinc-800 hover:bg-[#25D366] hover:text-white text-white font-bold text-xs uppercase transition-colors">WHATSAPP</button>
+           </div>
+        </div>
+
+        {/* 3. MEME GENERATOR (Tall) */}
+        <div className="md:col-span-1 lg:col-span-1 row-span-2 bg-matte-panel p-4 flex flex-col relative">
+           <PanelCorner />
+           <div className="flex-1 bg-zinc-950 flex items-center justify-center border border-zinc-800 mb-4 overflow-hidden">
+              <MemeGenerator name={targetName} score={result.cookedLevel} verdict={result.verdict} />
+           </div>
+           <div className="text-center">
+             <span className="label-sm text-zinc-600">EVIDENCE CARD GENERATOR</span>
+           </div>
+        </div>
+
+        {/* 4. EVIDENCE LIST (Wide) */}
+        <div className="md:col-span-2 lg:col-span-3 bg-matte-panel relative min-h-[300px] flex flex-col">
+           <PanelCorner />
+           <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900 sticky top-0 z-10">
+              <div className="flex items-center gap-3">
+                 <div className="w-2 h-2 bg-hard-gold rotate-45"></div>
+                 <h3 className="label-sm text-hard-gold">FORENSIC LOG</h3>
+              </div>
+           </div>
+           
+           <div className="flex-1 overflow-y-auto scrollbar-hide">
+              {result.evidence.map((item, idx) => {
                   const isOpen = expandedIndex === idx;
                   return (
-                    <div key={idx} className="border-4 border-black bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <div key={idx} className="border-b border-zinc-800 last:border-0 hover:bg-zinc-800/30 transition-colors">
                       <button 
                         onClick={() => setExpandedIndex(isOpen ? null : idx)}
-                        className="w-full flex justify-between items-center p-3 text-left hover:bg-zinc-100 transition-colors"
+                        className="w-full flex justify-between items-start p-5 text-left group"
                       >
-                        <div>
-                          <span className="font-impact text-lg uppercase mr-2 bg-black text-white px-1">{item.label}</span>
-                          <span className="font-mono text-sm font-bold uppercase">{item.detail}</span>
+                        <div className="flex gap-6 items-baseline">
+                          <span className="font-mono text-xs text-zinc-600">0{idx+1}</span>
+                          <div>
+                             <div className="label-sm text-zinc-500 mb-1">{item.label}</div>
+                             <div className="text-lg font-editorial text-zinc-200 group-hover:text-white leading-tight">{item.detail}</div>
+                          </div>
                         </div>
-                        <span className="font-mono font-bold text-xl px-2">{isOpen ? '[-]' : '[+]'}</span>
+                        <div className={`px-2 py-0.5 border text-[9px] font-bold uppercase tracking-wider ${item.status === 'clean' ? 'border-green-900 text-green-500' : 'border-red-900 text-red-500'}`}>
+                           {item.status}
+                        </div>
                       </button>
                       
                       {isOpen && (
-                        <div className="bg-black text-white p-4 font-mono text-xs border-t-4 border-black">
-                          <div className="mb-2">
-                             <span className="text-hard-gold font-bold">SOURCE: </span>
-                             <span className="text-zinc-300">{item.source || 'Unknown Source'}</span>
-                          </div>
-                          <div className="bg-zinc-900 p-2 border border-zinc-700">
-                             <span className="text-hard-concrete block mb-1">RAW DATA // SNIPPET:</span>
-                             <p className="text-green-400 font-bold font-mono whitespace-pre-wrap">
-                               "{item.snippet || 'No raw text available.'}"
-                             </p>
+                        <div className="p-4 bg-black/50">
+                          {/* RETRO WINDOW STYLE POPUP */}
+                          <div className="bg-zinc-900 border-2 border-zinc-700 shadow-2xl max-w-2xl mx-auto">
+                             <div className="bg-zinc-800 border-b border-zinc-700 p-1 flex justify-between items-center px-2">
+                                <span className="text-[10px] font-bold text-zinc-400 uppercase">EVIDENCE_VIEWER.EXE</span>
+                                <div className="flex gap-1">
+                                   <div className="w-3 h-3 bg-zinc-700 border border-zinc-600 flex items-center justify-center text-[8px] text-zinc-400">_</div>
+                                   <div className="w-3 h-3 bg-zinc-700 border border-zinc-600 flex items-center justify-center text-[8px] text-zinc-400">□</div>
+                                   <div onClick={() => setExpandedIndex(null)} className="w-3 h-3 bg-red-900 border border-red-700 flex items-center justify-center text-[8px] text-white cursor-pointer hover:bg-red-700">X</div>
+                                </div>
+                             </div>
+                             <div className="p-6 font-mono text-xs text-zinc-300">
+                                <div className="mb-4 text-zinc-500 border-b border-zinc-800 pb-2">
+                                  SOURCE: {item.source || 'UNKNOWN'}
+                                </div>
+                                <div className="bg-black p-4 border border-zinc-800 text-green-500">
+                                  > {item.snippet || 'No raw data available.'}
+                                </div>
+                             </div>
                           </div>
                         </div>
                       )}
                     </div>
                   );
-                })}
-              </div>
-            </div>
-
-            {/* SOCIAL FOOTPRINT / OSINT SECTION */}
-            {result.socialScan && result.socialScan.length > 0 && (
-              <div className="w-full bg-zinc-900 border-4 border-zinc-700 p-4 mb-8 text-left relative">
-                 <div className="absolute -top-3 left-4 bg-hard-blue text-black font-impact px-2">DIGITAL FOOTPRINT</div>
-                 <div className="space-y-3 pt-2">
-                    {result.socialScan.map((scan, idx) => (
-                      <div key={idx} className="flex items-start justify-between border-b border-zinc-800 pb-2 last:border-0">
-                        <div>
-                          <span className={`font-mono text-xs px-1 mr-2 ${scan.status === 'active' ? 'bg-green-500 text-black' : 'bg-zinc-700 text-zinc-400'}`}>
-                            {scan.platform.toUpperCase()}
-                          </span>
-                          <span className="font-mono text-sm text-white">{scan.detail}</span>
-                        </div>
-                        <span className="font-mono text-xs text-hard-gold text-right whitespace-nowrap ml-2">
-                           {scan.lastSeen}
-                        </span>
-                      </div>
-                    ))}
-                 </div>
-              </div>
-            )}
-
-          </div>
-
-          {/* ACTIONS */}
-          <div className="mt-4 flex flex-col gap-4 relative z-10">
-             {/* Primary Actions */}
-             <div className="grid grid-cols-2 gap-4">
-                <button 
-                  onClick={onReset}
-                  className="bg-hard-concrete text-white font-impact text-2xl py-4 border-4 border-black hover:bg-white hover:text-black transition-all uppercase shadow-hard"
-                >
-                  RETRY
-                </button>
-                <button 
-                  onClick={handleCopy}
-                  className="bg-black text-white font-impact text-2xl py-4 border-4 border-white hover:bg-white hover:text-black transition-all uppercase shadow-hard-white"
-                >
-                  {copied ? "COPIED" : "COPY LINK"}
-                </button>
-             </div>
-
-             {/* Social Shares */}
-             <div className="bg-black border-4 border-hard-gold p-4 shadow-[8px_8px_0_#FFD700]">
-                <p className="text-hard-gold font-mono text-xs mb-3 text-center uppercase tracking-widest border-b border-zinc-800 pb-2">
-                   BROADCAST TO THE STREETS
-                </p>
-                <div className="grid grid-cols-2 gap-4">
-                  <button 
-                    onClick={handleTwitterShare}
-                    className="bg-hard-blue text-black font-impact text-xl py-3 border-2 border-black hover:brightness-110 flex items-center justify-center gap-2"
-                  >
-                    <span>TWITTER / X</span>
-                  </button>
-                  <button 
-                    onClick={handleWhatsappShare}
-                    className="bg-[#25D366] text-black font-impact text-xl py-3 border-2 border-black hover:brightness-110 flex items-center justify-center gap-2"
-                  >
-                    <span>WHATSAPP</span>
-                  </button>
-                </div>
-             </div>
-
-             {/* THERAPY NUDGE / ETHICAL FLEX */}
-             <div className="mt-6 border-4 border-dashed border-zinc-600 p-4 bg-zinc-900 relative">
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-black px-2 text-white font-impact border border-zinc-600 tracking-widest text-sm md:text-base whitespace-nowrap">
-                  EMOTIONAL DAMAGE CONTROL
-                </div>
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-2">
-                  <div className="text-center md:text-left">
-                    <h3 className="text-hard-red font-impact text-xl">NEED TO VENT?</h3>
-                    <p className="font-mono text-xs text-zinc-400">
-                      AI roasts are for fun. Mental health is real. <br/>
-                      Claim a free venting session. No judgment.
-                    </p>
-                  </div>
-                  <a 
-                    href="https://instagram.com/avimaybe" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="bg-white text-black font-bold font-mono text-sm px-4 py-2 border-2 border-black shadow-[4px_4px_0_#FF3333] hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2 whitespace-nowrap"
-                  >
-                    <span>TEXT @AVIMAYBE</span>
-                    <span className="text-hard-red text-lg">❤</span>
-                  </a>
-                </div>
-             </div>
-          </div>
+              })}
+           </div>
         </div>
-      </div>
 
-      {/* RIGHT COLUMN: MEME GENERATOR */}
-      <div className="w-full md:w-1/3 flex flex-col gap-6">
-         <MemeGenerator name={targetName} score={result.cookedLevel} verdict={result.verdict} />
-      </div>
+        {/* 5. OSINT (Wide) */}
+        {result.socialScan && result.socialScan.length > 0 && (
+           <div className="md:col-span-3 lg:col-span-4 bg-matte-panel p-8 relative overflow-hidden group">
+              <PanelCorner />
+              <div className="absolute top-0 right-0 w-[300px] h-[300px] text-zinc-800 opacity-20 pointer-events-none -translate-y-1/2 translate-x-1/3 group-hover:text-zinc-700 transition-colors">
+                 <WireframeGlobe />
+              </div>
 
+              <h3 className="label-sm text-hard-blue mb-6">DIGITAL FOOTPRINT // OSINT</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
+                 {result.socialScan.map((scan, idx) => (
+                    <div key={idx} className="bg-zinc-900 border border-zinc-800 p-4 hover:border-white transition-colors flex flex-col justify-between h-24">
+                       <div className="flex justify-between items-start">
+                          <span className="font-bold text-xs uppercase tracking-wider text-white">{scan.platform}</span>
+                          <span className={`w-2 h-2 rounded-full ${scan.status === 'active' ? 'bg-green-500' : 'bg-zinc-700'}`}></span>
+                       </div>
+                       <div>
+                          <div className="text-[10px] text-zinc-400 truncate">{scan.detail}</div>
+                          <div className="text-[9px] font-mono text-zinc-600 mt-1 uppercase">{scan.lastSeen}</div>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           </div>
+        )}
+
+      </div>
     </div>
   );
 };

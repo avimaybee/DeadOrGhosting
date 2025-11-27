@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AM I COOKED? 💀</title>
+    <title>THE BLOCK // INTEL</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Courier+Prime:wght@400;700&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         darkMode: 'class',
@@ -13,34 +13,66 @@
           extend: {
             colors: {
               hard: {
-                black: '#050505',
-                gold: '#FFD700',
-                red: '#FF3333',     /* Brighter Red for readability */
-                blue: '#2998FF',    /* Electric Blue (was dark navy) for readability on black */
-                gray: '#121212',    /* Darker gray background */
-                concrete: '#A0A0A0',
+                black: '#09090b', 
+                gold: '#fbbf24',
+                red: '#ef4444',
+                blue: '#3b82f6',
+                purple: '#8b5cf6',
+                zinc: '#18181b',
+              },
+              matte: {
+                base: '#050505',
+                panel: '#09090b',
+                border: '#27272a',
               }
             },
             fontFamily: {
-              sans: ['Courier Prime', 'monospace'],
+              sans: ['Inter', 'sans-serif'],
+              mono: ['Courier Prime', 'monospace'],
               impact: ['Anton', 'sans-serif'],
             },
             backgroundImage: {
-              'grain': "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPSc1MTInIGhlaWdodD0nNTEyJz48ZmlsdGVyIGlkPSdub2lzZSc+PGZlVHVyYnVsZW5jZSB0eXBlPSdmcmFjdGFsTm9pc2UnIGJhc2VGcmVxdWVuY3k9JzAuODUnIG51bU9jdGF2ZXM9JzMnIHN0aXRjaFRpbGVzPSdzdGl0Y2gnLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0nMTAwJScgaGVpZ2h0PScxMDAlJyBmaWx0ZXI9J3VybCgjbm9pc2UpJyBvcGFjaXR5PScwLjE1Jy8+PC9zdmc+')",
-            },
-            boxShadow: {
-              'hard': '8px 8px 0px 0px rgba(255, 215, 0, 1)',
-              'hard-red': '8px 8px 0px 0px rgba(255, 51, 51, 1)',
-              'hard-white': '8px 8px 0px 0px rgba(255, 255, 255, 1)',
-              'hard-blue': '8px 8px 0px 0px rgba(41, 152, 255, 1)',
+              'grid-pattern': "linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px)",
+              'dot-pattern': "radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)",
+              'scan-lines': "repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(255, 255, 255, 0.03) 2px, rgba(255, 255, 255, 0.03) 3px)",
+              'topo-pattern': "url(\"data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0 Q 25 25 50 0 T 100 0' stroke='rgba(255,255,255,0.05)' fill='none'/%3E%3Cpath d='M0 20 Q 25 45 50 20 T 100 20' stroke='rgba(255,255,255,0.05)' fill='none'/%3E%3Cpath d='M0 40 Q 25 65 50 40 T 100 40' stroke='rgba(255,255,255,0.05)' fill='none'/%3E%3Cpath d='M0 60 Q 25 85 50 60 T 100 60' stroke='rgba(255,255,255,0.05)' fill='none'/%3E%3Cpath d='M0 80 Q 25 105 50 80 T 100 80' stroke='rgba(255,255,255,0.05)' fill='none'/%3E%3C/svg%3E\")"
             },
             animation: {
-              'scan': 'scan 4s linear infinite',
+              'blob': 'blob 10s infinite',
+              'aurora': 'aurora 20s infinite alternate',
+              'fade-in': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'spin-slow': 'spin 12s linear infinite',
+              'marquee': 'marquee 25s linear infinite',
+              'pulse-glow': 'pulseGlow 4s ease-in-out infinite',
             },
             keyframes: {
-              scan: {
-                '0%': { transform: 'translateY(-100%)' },
-                '100%': { transform: 'translateY(100%)' }
+              blob: {
+                '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                '100%': { transform: 'translate(0px, 0px) scale(1)' },
+              },
+              aurora: {
+                '0%': { backgroundPosition: '0% 50%' },
+                '50%': { backgroundPosition: '100% 50%' },
+                '100%': { backgroundPosition: '0% 50%' },
+              },
+              fadeIn: {
+                '0%': { opacity: '0', filter: 'blur(4px)' },
+                '100%': { opacity: '1', filter: 'blur(0)' }
+              },
+              slideUp: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' }
+              },
+              marquee: {
+                '0%': { transform: 'translateX(0%)' },
+                '100%': { transform: 'translateX(-100%)' }
+              },
+              pulseGlow: {
+                '0%, 100%': { opacity: '0.6', filter: 'blur(20px)' },
+                '50%': { opacity: '1', filter: 'blur(35px)' }
               }
             }
           },
@@ -50,36 +82,48 @@
     <style>
       body {
         background-color: #050505;
-        color: #ffffff;
+        color: #f4f4f5;
+        font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow: hidden;
+        cursor: crosshair;
       }
-      .font-impact { font-family: 'Anton', sans-serif; }
-      .font-mono { font-family: 'Courier Prime', monospace; }
       
-      /* CRT Effect */
-      .crt::before {
-        content: " ";
-        display: block;
-        position: absolute;
+      .font-impact { font-family: 'Anton', sans-serif; letter-spacing: 0.02em; text-transform: uppercase; }
+      .font-editorial { font-family: 'Inter', sans-serif; letter-spacing: -0.02em; font-weight: 600; }
+      .label-sm { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: #71717a; }
+
+      /* Matte Grain */
+      .bg-matte-grain {
+        position: fixed;
         top: 0;
         left: 0;
-        bottom: 0;
-        right: 0;
-        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-        z-index: 50;
-        background-size: 100% 2px, 3px 100%;
+        width: 100%;
+        height: 100%;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
         pointer-events: none;
+        z-index: 50;
+        opacity: 0.5;
+        mix-blend-mode: overlay;
       }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 0px; }
+      ::-webkit-scrollbar-thumb:hover { background: #71717a; }
       
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      
+      /* Utilities */
       .text-outline {
-        text-shadow: 
-          -1px -1px 0 #000,  
-           1px -1px 0 #000,
-          -1px  1px 0 #000,
-           1px  1px 0 #000,
-           4px 4px 0 #000;
+        -webkit-text-stroke: 1px rgba(255,255,255,0.2);
+        color: transparent;
       }
     </style>
-  <script type="importmap">
+    <script type="importmap">
 {
   "imports": {
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
@@ -89,11 +133,10 @@
   }
 }
 </script>
-</head>
+  </head>
   <body>
     <div id="root"></div>
-    <!-- Reduced opacity from 0.5 to 0.2 for better text readability -->
-    <div class="crt fixed inset-0 pointer-events-none z-50 mix-blend-overlay opacity-20"></div>
+    <div class="bg-matte-grain"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>
