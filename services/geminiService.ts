@@ -1,5 +1,6 @@
+
 import { GoogleGenAI } from "@google/genai";
-import { GhostResult } from "../types";
+import { GhostResult, SimResult } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -150,6 +151,73 @@ export const analyzeGhosting = async (
       socialScan: [],
       identifiedName: name || "UNKNOWN",
       identifiedCity: city || "UNKNOWN"
+    };
+  }
+};
+
+export const simulateDraft = async (
+  draft: string,
+  context: string
+): Promise<SimResult> => {
+  
+  const prompt = `
+    SYSTEM IDENTITY: THE UNSEND SENTINEL.
+    VIBE: "Rizz Coach" meets "Street Oracle". Brutal honesty, but helpful.
+    
+    TASK: Analyze this draft text message. Calculate the "Regret Level" (how likely they are to get ghosted or look stupid). Provide better alternatives.
+
+    INPUT CONTEXT: Target is: "${context}".
+    INPUT DRAFT: "${draft}"
+
+    OUTPUT FORMAT (RAW JSON ONLY):
+    {
+      "regretLevel": number (0-100. 0 = Safe/Rizz God, 100 = Immediate Block/Cringe),
+      "verdict": "string (Short, all-caps summary. e.g. 'THIRST LEVELS CRITICAL', 'SOLID OPENER', 'WAY TOO AGGRESSIVE')",
+      "feedback": ["string", "string", "string"] (3 bullet points explaining why. Be specific about tone, length, or cringe factor),
+      "rewrites": {
+        "safe": "string (A low-risk, casual version. Removes the cringe)",
+        "bold": "string (Confident, direct, high-reward but not creepy)",
+        "spicy": "string (Flirty/Risky, use only if confident. Add 1-2 relevant emojis)"
+      }
+    }
+    
+    RULES:
+    - If draft is abusive/toxic, set regretLevel to 100 and tell them to seek help in feedback.
+    - If draft is boring ("hey"), suggest something better.
+    - If draft is overly emotional to an Ex, warn them.
+    
+    DO NOT USE MARKDOWN. ONLY RAW JSON.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+    });
+
+    let text = response.text;
+    if (!text) throw new Error("Connection Lost");
+    
+    text = text.trim();
+    if (text.startsWith('```json')) {
+      text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (text.startsWith('```')) {
+      text = text.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+
+    return JSON.parse(text) as SimResult;
+
+  } catch (error) {
+    console.error("Sim Failed:", error);
+    return {
+      regretLevel: 50,
+      verdict: "SYSTEM ERROR",
+      feedback: ["AI Overheated analyzing your text.", "Try again.", "Maybe just call them?"],
+      rewrites: {
+        safe: "Hey",
+        bold: "Hello",
+        spicy: "Hi ;)"
+      }
     };
   }
 };

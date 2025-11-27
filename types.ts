@@ -1,3 +1,4 @@
+
 export interface GhostRequest {
   name: string;
   city: string;
@@ -29,6 +30,17 @@ export interface GhostResult {
   memeUrl?: string; // Optional generated image concept
   identifiedName?: string; // OCR extracted name
   identifiedCity?: string; // OCR extracted/inferred city
+}
+
+export interface SimResult {
+  regretLevel: number; // 0-100 (0 = Safe, 100 = Suicide mission)
+  verdict: string; // "ABSOLUTE FIRE" or "IMMEDIATE JAIL"
+  feedback: string[]; // 3 bullet points
+  rewrites: {
+    safe: string;
+    bold: string;
+    spicy: string;
+  };
 }
 
 export type AppState = 'landing' | 'loading' | 'results' | 'error';
