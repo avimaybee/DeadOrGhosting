@@ -1,8 +1,16 @@
 
-import { GoogleGenAI } from "@google/genai";
-import { GhostResult, SimResult } from "../types";
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
+import { GhostResult, SimResult, Persona, SimAnalysisResult } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+// SAFETY SETTINGS: BLOCK_NONE as requested for mature/unrestricted feedback
+const safetySettings = [
+  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+  { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+  { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+  { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+];
 
 export const analyzeGhosting = async (
   name?: string,
@@ -32,7 +40,12 @@ export const analyzeGhosting = async (
     parts.push({
       text: `EVIDENCE SUBMITTED: ${screenshotsBase64.length} screenshot(s) of conversation.
       ${isAutoDetect ? "USER HAS NOT PROVIDED NAME/CITY. YOU MUST EXTRACT IT FROM THE IMAGE HEADER/CONTEXT." : `Subject Name: "${userProvidedName}". Subject City: "${userProvidedCity}".`}
-      ANALYZE TIMESTAMP GAPS, ONE-WORD REPLIES, AND DISRESPECT.`
+      
+      CRITICAL INSTRUCTION FOR SCREENSHOT ANALYSIS:
+      - Messages aligned to the RIGHT (usually colored) are the USER (Me). IGNORE THESE when calculating ghost/cooked levels.
+      - Messages aligned to the LEFT (usually gray/neutral) are the TARGET (Them). FOCUS YOUR ANALYSIS ENTIRELY ON THESE MESSAGES.
+      
+      ANALYZE THE TARGET'S (LEFT SIDE) BEHAVIOR: TIMESTAMP GAPS, ONE-WORD REPLIES, AND DISRESPECT.`
     });
   } else {
     parts.push({
@@ -124,6 +137,7 @@ export const analyzeGhosting = async (
       contents: { parts: parts },
       config: {
         tools: [{ googleSearch: {} }],
+        safetySettings: safetySettings,
       }
     });
 
@@ -155,36 +169,117 @@ export const analyzeGhosting = async (
   }
 };
 
+export const generatePersona = async (
+  description: string,
+  screenshotsBase64: string[]
+): Promise<Persona> => {
+  const parts: any[] = [];
+
+  if (screenshotsBase64 && screenshotsBase64.length > 0) {
+    screenshotsBase64.forEach(base64 => {
+      parts.push({ inlineData: { mimeType: "image/png", data: base64 } });
+    });
+    parts.push({ text: "Use these screenshots to infer the person's tone, style, and habits." });
+  }
+
+  parts.push({
+    text: `
+    SYSTEM: PERSONA ARCHITECT.
+    TASK: Create a deep psychological profile of the "Target" based on the user's description and any screenshots provided.
+    
+    CRITICAL SCREENSHOT ANALYSIS RULE:
+    - Messages aligned to the RIGHT (Me/User) are IRRELEVANT for the persona profile. IGNORE THEM.
+    - Messages aligned to the LEFT (Them/Target) are the ONLY source of truth for tone/style.
+    
+    USER DESCRIPTION: "${description}"
+    
+    OUTPUT JSON:
+    {
+      "name": "string (Inferred from screenshots or description. Default 'The Target')",
+      "tone": "string (e.g., 'Dry & Sarcastic', 'Overly Eager', 'Professional')",
+      "style": "string (e.g., 'Lowercase no punctuation', 'Uses excessive emojis', 'Formal grammar')",
+      "habits": "string (e.g., 'Double texts', 'Ghosts for 24h', 'Only replies late night')",
+      "redFlags": ["string", "string"] (List 2 key red flags based on behavior)
+    }
+    DO NOT USE MARKDOWN. ONLY RAW JSON.
+    `
+  });
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: { parts: parts },
+      config: { safetySettings: safetySettings }
+    });
+
+    let text = response.text;
+    if (!text) throw new Error("No data");
+    text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    
+    const data = JSON.parse(text);
+    return { ...data, id: Date.now().toString(), description };
+  } catch (e) {
+    console.error("Persona Gen Failed", e);
+    return {
+      id: Date.now().toString(),
+      name: "The Mystery",
+      description,
+      tone: "Unknown",
+      style: "Standard",
+      habits: "Unpredictable",
+      redFlags: ["Analysis Failed"]
+    };
+  }
+};
+
 export const simulateDraft = async (
   draft: string,
-  context: string
+  persona: Persona
 ): Promise<SimResult> => {
   
   const prompt = `
-    SYSTEM IDENTITY: THE UNSEND SENTINEL.
-    VIBE: "Rizz Coach" meets "Street Oracle". Brutal honesty, but helpful.
+    SYSTEM IDENTITY: THE UNSEND SENTINEL (GEN Z RIZZ GOD MODE).
+    VIBE: Authentic Gen Z texter (18-24yo). Lowercase, minimal punctuation, heavy slang (but natural).
     
-    TASK: Analyze this draft text message. Calculate the "Regret Level" (how likely they are to get ghosted or look stupid). Provide better alternatives.
+    ANTI-CRINGE PROTOCOL:
+    - ABSOLUTELY NO "Millennial" phrases (e.g., "lolz", "trouble", "*smirks*", "adventure", "mundane", "kinda", "haha", "buddy").
+    - NO ROBOTIC SENTENCES like "Sounds like you need excitement".
+    - NO OVERLY FORMAL GRAMMAR.
+    - NO PERIODS AT THE END OF MESSAGES.
+    
+    TEXTING AESTHETIC:
+    - Lowercase everything.
+    - Emojis: 💀 (laughing), 😭 (laughing/crying), 🧢 (cap), 🙄 (annoyed), 🥺 (pleading), 💅 (sass). AVOID: 😂 🤣.
+    - Slang: "fr", "rn", "idk", "lowkey", "bet", "no way", "bruh", "period", "vibe", "ick", "mid", "obsessed".
+    - Grammar: Drop subjects ("want to" -> "wanna"), abbreviations ("you" -> "u", "are" -> "r").
+    
+    TARGET PERSONA:
+    - Name: ${persona.name}
+    - Tone: ${persona.tone}
+    - Style: ${persona.style}
+    - Habits: ${persona.habits}
+    - Red Flags: ${persona.redFlags.join(', ')}
 
-    INPUT CONTEXT: Target is: "${context}".
+    TASK: 
+    1. Analyze the user's draft text message sent TO this Persona.
+    2. Calculate "Regret Level" (0-100) for sending that draft.
+    3. PREDICT how the Persona would reply based on their Tone/Style.
+    4. SUGGEST 3 follow-up responses the USER should send back to the Persona's predicted reply (the next turn).
+
     INPUT DRAFT: "${draft}"
 
     OUTPUT FORMAT (RAW JSON ONLY):
     {
-      "regretLevel": number (0-100. 0 = Safe/Rizz God, 100 = Immediate Block/Cringe),
-      "verdict": "string (Short, all-caps summary. e.g. 'THIRST LEVELS CRITICAL', 'SOLID OPENER', 'WAY TOO AGGRESSIVE')",
-      "feedback": ["string", "string", "string"] (3 bullet points explaining why. Be specific about tone, length, or cringe factor),
+      "regretLevel": number (0-100),
+      "verdict": "string (Short, all-caps summary of the draft quality)",
+      "feedback": ["string", "string", "string"] (3 bullet points analyzing the draft),
+      "predictedReply": "string (Simulation of what ${persona.name} replies to the draft. Match their style/tone/habits exactly.)",
       "rewrites": {
-        "safe": "string (A low-risk, casual version. Removes the cringe)",
-        "bold": "string (Confident, direct, high-reward but not creepy)",
-        "spicy": "string (Flirty/Risky, use only if confident. Add 1-2 relevant emojis)"
+        "safe": "string (Suggested follow-up to predicted reply - Chill/Low investment)",
+        "bold": "string (Suggested follow-up to predicted reply - Direct/High confidence)",
+        "spicy": "string (Suggested follow-up to predicted reply - Sassy/Provocative/High Risk)"
       }
     }
-    
-    RULES:
-    - If draft is abusive/toxic, set regretLevel to 100 and tell them to seek help in feedback.
-    - If draft is boring ("hey"), suggest something better.
-    - If draft is overly emotional to an Ex, warn them.
     
     DO NOT USE MARKDOWN. ONLY RAW JSON.
   `;
@@ -193,6 +288,7 @@ export const simulateDraft = async (
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,
+      config: { safetySettings: safetySettings }
     });
 
     let text = response.text;
@@ -212,12 +308,84 @@ export const simulateDraft = async (
     return {
       regretLevel: 50,
       verdict: "SYSTEM ERROR",
-      feedback: ["AI Overheated analyzing your text.", "Try again.", "Maybe just call them?"],
+      feedback: ["AI Overheated.", "Try again."],
+      predictedReply: "...",
       rewrites: {
-        safe: "Hey",
-        bold: "Hello",
-        spicy: "Hi ;)"
+        safe: "damn",
+        bold: "bruh",
+        spicy: "no way 💀"
       }
+    };
+  }
+};
+
+export const analyzeSimulation = async (
+  history: { draft: string, result: SimResult }[],
+  persona: Persona
+): Promise<SimAnalysisResult> => {
+  const transcript = history.map((h, i) => 
+    `Turn ${i + 1}:\nUser: "${h.draft}"\nTarget (${persona.name}): "${h.result.predictedReply}"`
+  ).join('\n\n');
+
+  const prompt = `
+    SYSTEM IDENTITY: THE UNSEND SENTINEL - RELATIONSHIP DIAGNOSTIC OFFICER.
+    MISSION: Analyze the full simulated chat session between the User and the Target (${persona.name}).
+    
+    METRICS TO ANALYZE:
+    1. **GHOST RISK**: How likely is the target to ghost based on their simulated responses (length, latency, dry answers)?
+    2. **VIBE MATCH**: Did the target mirror the user's energy/slang/emojis? Or did they drift apart?
+    3. **EFFORT BALANCE**: Who is carrying the convo? (50 = Equal. >50 means User is trying too hard/simping. <50 means User is dry).
+    
+    TARGET PERSONA TRAITS:
+    - Tone: ${persona.tone}
+    - Style: ${persona.style}
+
+    CHAT TRANSCRIPT:
+    ${transcript}
+
+    OUTPUT FORMAT (RAW JSON ONLY):
+    {
+      "ghostRisk": number (0-100),
+      "vibeMatch": number (0-100),
+      "effortBalance": number (0-100),
+      "headline": "string (e.g. 'Overall session ghost risk: 65%')",
+      "insights": ["string", "string", "string"] (3 bullet points analyzing tone dynamics, specific turning points, or boundary signals),
+      "turningPoint": "string (Identify the exact moment the vibe shifted, if any)",
+      "advice": "string (Final recommended next move: Pull back, Hard stop, or Full send)"
+    }
+    
+    DO NOT USE MARKDOWN. ONLY RAW JSON.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: { safetySettings: safetySettings }
+    });
+
+    let text = response.text;
+    if (!text) throw new Error("Connection Lost");
+    
+    text = text.trim();
+    if (text.startsWith('```json')) {
+      text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (text.startsWith('```')) {
+      text = text.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+
+    return JSON.parse(text) as SimAnalysisResult;
+
+  } catch (error) {
+    console.error("Analysis Failed:", error);
+    return {
+      ghostRisk: 50,
+      vibeMatch: 50,
+      effortBalance: 50,
+      headline: "ANALYSIS FAILED",
+      insights: ["System could not process transcript.", "Try again later."],
+      turningPoint: "Unknown",
+      advice: "Proceed with caution."
     };
   }
 };

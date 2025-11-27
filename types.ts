@@ -32,15 +32,36 @@ export interface GhostResult {
   identifiedCity?: string; // OCR extracted/inferred city
 }
 
+export interface Persona {
+  id: string;
+  name: string;
+  description: string;
+  tone: string; // "Dry", "Flirty", "Formal"
+  style: string; // "Lowercase", "Emoji heavy"
+  habits: string; // "Ghosts for days", "Instant reply"
+  redFlags: string[];
+}
+
 export interface SimResult {
   regretLevel: number; // 0-100 (0 = Safe, 100 = Suicide mission)
   verdict: string; // "ABSOLUTE FIRE" or "IMMEDIATE JAIL"
   feedback: string[]; // 3 bullet points
+  predictedReply?: string; // What the target might say
   rewrites: {
     safe: string;
     bold: string;
     spicy: string;
   };
+}
+
+export interface SimAnalysisResult {
+  ghostRisk: number; // 0-100
+  vibeMatch: number; // 0-100
+  effortBalance: number; // 0-100 (50 = Equal, >50 User trying too hard)
+  headline: string; // "Overall session ghost risk: 65%"
+  insights: string[]; // 2-3 bullet points
+  turningPoint: string; // "Things got weird after..."
+  advice: string; // "Pull back" or "Go for it"
 }
 
 export type AppState = 'landing' | 'loading' | 'results' | 'error';

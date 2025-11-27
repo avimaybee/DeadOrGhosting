@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { analyzeGhosting } from './services/geminiService';
 import { LoadingScreen } from './components/LoadingScreen';
@@ -35,7 +34,7 @@ function App() {
           setPreviewUrls(prev => [...prev, base64String]);
           setScreenshots(prev => [...prev, base64Data]);
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(file as Blob);
       });
     }
   };
