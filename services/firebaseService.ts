@@ -20,13 +20,13 @@ import { getAnalytics, logEvent } from 'firebase/analytics';
 
 // Firebase Configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyC-7S_dN9_9k8j0L0_p9q0R1s2t3u4v5w6x",
-  authDomain: "rizzbot-app.firebaseapp.com",
-  projectId: "rizzbot-app",
-  storageBucket: "rizzbot-app.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef1234567890",
-  measurementId: "G-ABCDEFGHIJ",
+  apiKey: "AIzaSyCm2XGzgv5Tlsm7bkw_lCYsfPaR7N3NOWQ",
+  authDomain: "rizzbot-auth.firebaseapp.com",
+  projectId: "rizzbot-auth",
+  storageBucket: "rizzbot-auth.firebasestorage.app",
+  messagingSenderId: "337505017340",
+  appId: "1:337505017340:web:80ed41857a045e50e92679",
+  measurementId: "G-0S5E7X2RM1",
 };
 
 // Initialize Firebase
