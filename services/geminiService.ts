@@ -25,7 +25,7 @@ export const analyzeGhosting = async (
   lastMessage?: string,
   screenshotsBase64?: string[]
 ): Promise<GhostResult> => {
-  
+
   const parts: any[] = [];
 
   // Determine context for the AI
@@ -43,7 +43,7 @@ export const analyzeGhosting = async (
         }
       });
     });
-    
+
     parts.push({
       text: `EVIDENCE SUBMITTED: ${screenshotsBase64.length} screenshot(s) of conversation.
       ${isAutoDetect ? "USER HAS NOT PROVIDED NAME/CITY. YOU MUST EXTRACT IT FROM THE IMAGE HEADER/CONTEXT." : `Subject Name: "${userProvidedName}". Subject City: "${userProvidedCity}".`}
@@ -150,7 +150,7 @@ export const analyzeGhosting = async (
 
     let text = response.text;
     if (!text) throw new Error("Connection Lost");
-    
+
     text = text.trim();
     if (text.startsWith('```json')) {
       text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '');
@@ -237,7 +237,7 @@ export const generatePersona = async (
     let text = response.text;
     if (!text) throw new Error("No data");
     text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    
+
     const data = JSON.parse(text);
     return { ...data, id: Date.now().toString(), description };
   } catch (e) {
@@ -259,7 +259,7 @@ export const simulateDraft = async (
   persona: Persona,
   userStyle?: UserStyleProfile | null
 ): Promise<SimResult> => {
-  
+
   // Build user style context if available
   let userStyleContext = '';
   if (userStyle) {
@@ -358,7 +358,7 @@ export const simulateDraft = async (
 
     let text = response.text;
     if (!text) throw new Error("Connection Lost");
-    
+
     text = text.trim();
     if (text.startsWith('```json')) {
       text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '');
@@ -390,7 +390,7 @@ export const analyzeSimulation = async (
   persona: Persona,
   userStyle?: UserStyleProfile | null
 ): Promise<SimAnalysisResult> => {
-  const transcript = history.map((h, i) => 
+  const transcript = history.map((h, i) =>
     `Turn ${i + 1}:\nUser: "${h.draft}"\nTarget (${persona.name}): "${h.result.predictedReply}"`
   ).join('\n\n');
 
@@ -471,7 +471,7 @@ export const analyzeSimulation = async (
 
     let text = response.text;
     if (!text) throw new Error("Connection Lost");
-    
+
     text = text.trim();
     if (text.startsWith('```json')) {
       text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '');
@@ -506,13 +506,13 @@ export const analyzeSimulation = async (
 export const getQuickAdvice = async (
   request: QuickAdviceRequest
 ): Promise<QuickAdviceResponse> => {
-  
+
   // Build user style context if available
   let styleContext = '';
   if (request.userStyle) {
     const s = request.userStyle;
     styleContext = `
-    USER'S TEXTING STYLE (Match this for the "you" suggestion):
+    USER'S TEXTING STYLE (Match this for the "authentic" suggestion):
     - Emoji use: ${s.emojiUsage}
     - Caps style: ${s.capitalization}
     - Punctuation: ${s.punctuation}
@@ -579,7 +579,7 @@ export const getQuickAdvice = async (
     - 👀 = interested / "spill"
     - 🫠 = melting / overwhelmed
     - 🥺 = pleading (often ironic)
-    REMEMBER: 💀 and 😭 replace laughing emojis. NEVER use 😂
+    - REMEMBER: 💀 and 😭 replace laughing emojis. NEVER use 😂
     
     YOUR VOICE WHEN GIVING FEEDBACK:
     - Like texting ur best friend who's good at this
@@ -605,14 +605,25 @@ export const getQuickAdvice = async (
     SITUATION CONTEXT: ${situationContext}
     ${styleContext}
     
+    ${request.screenshots && request.screenshots.length > 0 ? `
+    SCREENSHOTS PROVIDED: ${request.screenshots.length} image(s) of the conversation.
+    CRITICAL INSTRUCTION: Analyze the ENTIRE flow. Look at:
+    1. Who is texting more? (Double texting? Long paragraphs?)
+    2. Time gaps (Who waits longer?)
+    3. Tone shifts (Did it get dry? Did they suddenly pull back?)
+    4. The specific content of the LAST message received (this is what we are replying to).
+    
+    ${request.theirMessage ? `ADDITIONAL CONTEXT FROM USER: "${request.theirMessage}"` : ''}
+    ` : `
     THEIR MESSAGE (what they sent):
     "${request.theirMessage}"
+    `}
     
     ${request.yourDraft ? `USER'S DRAFT (what they want to send back):
     "${request.yourDraft}"` : 'USER HAS NO DRAFT - they need suggestions from scratch.'}
     
     TASK:
-    1. Read their message - assess the vibe (energy, interest, flags)
+    1. Assess the vibe (energy, interest, flags) based on the text provided OR the screenshots.
     2. ${request.yourDraft ? 'Analyze the draft - is it gonna get them ghosted?' : 'Think about the smoothest responses'}
     3. Give them options at different energy levels
     4. Drop one psychology-based pro tip (casual, not preachy)
@@ -654,16 +665,31 @@ export const getQuickAdvice = async (
     DO NOT USE MARKDOWN. ONLY RAW JSON.
   `;
 
+  const parts: any[] = [{ text: prompt }];
+
+  if (request.screenshots && request.screenshots.length > 0) {
+    request.screenshots.forEach(base64 => {
+      // Remove data URL prefix if present
+      const cleanBase64 = base64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
+      parts.push({
+        inlineData: {
+          data: cleanBase64,
+          mimeType: "image/png"
+        }
+      });
+    });
+  }
+
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: prompt,
+      contents: parts,
       config: { safetySettings: safetySettings }
     });
 
     let text = response.text;
     if (!text) throw new Error("Connection Lost");
-    
+
     text = text.trim();
     if (text.startsWith('```json')) {
       text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '');
@@ -701,7 +727,7 @@ export const getQuickAdvice = async (
  */
 export const extractUserStyle = async (request: StyleExtractionRequest): Promise<StyleExtractionResponse> => {
   const parts: any[] = [];
-  
+
   // Add screenshots if provided (uses Gemini vision)
   if (request.screenshots && request.screenshots.length > 0) {
     request.screenshots.forEach(base64 => {
@@ -713,7 +739,7 @@ export const extractUserStyle = async (request: StyleExtractionRequest): Promise
       });
     });
   }
-  
+
   // Build the text samples section
   let samplesContext = '';
   if (request.sampleTexts && request.sampleTexts.length > 0) {
@@ -722,7 +748,7 @@ export const extractUserStyle = async (request: StyleExtractionRequest): Promise
 
   const prompt = `You are analyzing someone's PERSONAL texting style to help them communicate authentically.
 
-${request.screenshots && request.screenshots.length > 0 ? `SCREENSHOTS PROVIDED: ${request.screenshots.length} image(s) of the user's OWN text messages. Extract ONLY the texts sent BY the user (usually shown on the right side / blue bubbles in iMessage, green in SMS). Ignore received messages.` : ''}
+${request.screenshots && request.screenshots.length > 0 ? `SCREENSHOTS PROVIDED: ${request.screenshots.length} image(s) of the user's OWN text messages. \nCRITICAL INSTRUCTION: The USER'S messages are ALWAYS on the RIGHT side (Blue/Green bubbles). The LEFT side (Gray) is the other person. \nYOU MUST ONLY ANALYZE THE TEXTS ON THE RIGHT SIDE to determine the user's style. IGNORE the left side completely.` : ''}
 ${samplesContext}
 
 YOUR TASK: Analyze the user's unique texting patterns and create a comprehensive style profile.
@@ -791,7 +817,7 @@ IMPORTANT:
 - Be accurate to what you actually observe, don't assume or stereotype
 - If you can't confidently determine something, use the most neutral option
 - The summary should sound like a friend describing their texting style
-- Confidence should reflect how much data you had to analyze (more samples = higher confidence)`;
+- Confidence should reflect how much data you had to analyze and how accurate your analysis is (more samples = higher accuracy)`;
 
   parts.push({ text: prompt });
 
@@ -807,7 +833,7 @@ IMPORTANT:
     });
 
     let text = response.text?.trim() || '';
-    
+
     // Clean JSON response
     if (text.startsWith('```json')) {
       text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '');

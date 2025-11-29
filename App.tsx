@@ -539,13 +539,14 @@ function App() {
         />
       )}
 
+
       <SideDock activeModule={activeModule} setModule={setActiveModule} />
 
       {/* MAIN CONTAINER */}
-      <div className="flex-1 relative h-full flex flex-col p-2 md:p-4 overflow-y-auto pb-24 md:pb-4">
+      <div className="flex-1 relative h-full flex flex-col p-2 md:p-4 overflow-y-auto md:overflow-hidden pb-24 md:pb-4 scrollbar-hide">
 
         {/* VIEWPORT FRAME */}
-        <div className="relative w-full flex-1 min-h-0 border border-zinc-800 bg-black/20 overflow-y-auto flex flex-col shadow-2xl">
+        <div className="relative w-full flex-1 min-h-0 border border-zinc-800 bg-black/20 overflow-hidden flex flex-col shadow-2xl">
           <CornerNodes />
 
           {state === 'loading' && <LoadingScreen />}
@@ -557,21 +558,21 @@ function App() {
 
           {/* PRACTICE MODE MODULE */}
           {activeModule === 'simulator' && (
-            <div className="h-full w-full flex flex-col animate-fade-in bg-matte-base overflow-y-auto">
+            <div className="h-full w-full flex flex-col animate-fade-in bg-matte-base">
               <Simulator onPivotToInvestigator={ENABLE_INVESTIGATOR ? () => setActiveModule('investigator') : undefined} userProfile={userProfile} />
             </div>
           )}
 
           {/* QUICK MODE MODULE */}
           {activeModule === 'quick' && (
-            <div className="h-full w-full flex flex-col animate-fade-in overflow-y-auto">
+            <div className="h-full w-full flex flex-col animate-fade-in">
               <QuickAdvisor onBack={() => setActiveModule('standby')} userProfile={userProfile} />
             </div>
           )}
 
           {/* USER PROFILE MODULE */}
           {activeModule === 'profile' && (
-            <div className="h-full w-full flex flex-col animate-fade-in overflow-y-auto">
+            <div className="h-full w-full flex flex-col animate-fade-in">
               <UserProfile
                 onBack={() => setActiveModule('standby')}
                 onSave={handleSaveProfile}
@@ -729,11 +730,11 @@ function App() {
         {/* SYSTEM TICKER */}
         <SystemTicker />
 
-      </div>
+      </div >
 
       {/* Mobile Bottom Navigation */}
-      <BottomTabs activeModule={activeModule} setModule={setActiveModule} />
-    </div>
+      < BottomTabs activeModule={activeModule} setModule={setActiveModule} />
+    </div >
   );
 }
 

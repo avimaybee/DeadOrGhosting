@@ -143,6 +143,7 @@ export interface QuickAdviceRequest {
   yourDraft?: string; // Optional: what you're thinking of saying
   context?: 'new' | 'talking' | 'dating' | 'complicated' | 'ex';
   userStyle?: UserStyleProfile; // If available from onboarding
+  screenshots?: string[]; // Optional: screenshots of the conversation
 }
 
 /**

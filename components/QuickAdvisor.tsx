@@ -1,8 +1,8 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { QuickAdviceRequest, QuickAdviceResponse, UserStyleProfile, FeedbackEntry } from '../types';
 import { getQuickAdvice } from '../services/geminiService';
 import { saveFeedback, logSession } from '../services/feedbackService';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Upload, X, Image } from 'lucide-react';
 
 interface QuickAdvisorProps {
   onBack: () => void;
@@ -50,9 +50,30 @@ export const QuickAdvisor: React.FC<QuickAdvisorProps> = ({ onBack, userProfile 
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
   const [feedbackGiven, setFeedbackGiven] = useState<Record<string, 'helpful' | 'mid' | 'off'>>({});
   const [showFeedbackThanks, setShowFeedbackThanks] = useState(false);
+  const [screenshots, setScreenshots] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file: any) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          setScreenshots(prev => [...prev, reader.result as string]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeScreenshot = (index: number) => {
+    setScreenshots(prev => prev.filter((_, i) => i !== index));
+  };
 
   const handleAnalyze = useCallback(async () => {
-    if (!theirMessage.trim()) return;
+    if (!theirMessage.trim() && screenshots.length === 0) return;
 
     setIsLoading(true);
     setResult(null);
@@ -64,6 +85,7 @@ export const QuickAdvisor: React.FC<QuickAdvisorProps> = ({ onBack, userProfile 
       yourDraft: yourDraft.trim() || undefined,
       context,
       userStyle: userProfile || undefined,
+      screenshots: screenshots.length > 0 ? screenshots : undefined
     };
 
     try {
@@ -76,7 +98,7 @@ export const QuickAdvisor: React.FC<QuickAdvisorProps> = ({ onBack, userProfile 
     } finally {
       setIsLoading(false);
     }
-  }, [theirMessage, yourDraft, context, userProfile]);
+  }, [theirMessage, yourDraft, context, userProfile, screenshots]);
 
   const copyToClipboard = useCallback((text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -107,6 +129,7 @@ export const QuickAdvisor: React.FC<QuickAdvisorProps> = ({ onBack, userProfile 
     setResult(null);
     setTheirMessage('');
     setYourDraft('');
+    setScreenshots([]);
     setFeedbackGiven({});
     setShowFeedbackThanks(false);
   }, []);
@@ -150,7 +173,7 @@ export const QuickAdvisor: React.FC<QuickAdvisorProps> = ({ onBack, userProfile 
   // Input View
   if (!result) {
     return (
-      <div className="h-full w-full flex flex-col bg-matte-base relative overflow-hidden">
+      <div className="h-full w-full flex flex-col bg-matte-base relative overflow-hidden scrollbar-hide">
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-topo-pattern opacity-5 pointer-events-none"></div>
 
@@ -174,22 +197,80 @@ export const QuickAdvisor: React.FC<QuickAdvisorProps> = ({ onBack, userProfile 
           {/* Title Section */}
           <div className="mb-8">
             <div className="label-sm text-hard-gold mb-2">QUICK MODE</div>
-            <h2 className="text-4xl md:text-5xl font-impact text-white uppercase tracking-tight">WTF DO I SAY?</h2>
-            <p className="text-zinc-500 text-sm mt-2 font-mono">Paste the chaos. Get the play.</p>
+            <h2 className="text-4xl md:text-5xl font-impact text-white uppercase tracking-tight">WHAT DO I SAY?</h2>
+            <p className="text-zinc-500 text-sm mt-2 font-mono">Paste the texts. Get the texts.</p>
           </div>
 
           {/* Form Grid */}
           <div className="grid md:grid-cols-2 gap-6 flex-1">
             {/* Left Column - Inputs */}
             <div className="space-y-6">
-              {/* Their Message */}
+              {/* Screenshot Upload (Primary) */}
               <div>
-                <label className="label-sm text-zinc-400 mb-2 block">WHAT THEY HIT YOU WITH</label>
+                <label className="label-sm text-hard-gold mb-2 block flex items-center gap-2">
+                  <Image className="w-3 h-3" />
+                  EVIDENCE (SCREENSHOTS)
+                </label>
+
+                {/* File Input */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                />
+
+                {/* Upload Zone / Preview */}
+                <div className="space-y-3">
+                  {screenshots.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-2">
+                      {screenshots.map((src, index) => (
+                        <div key={index} className="relative aspect-[9/16] group bg-black border border-zinc-800">
+                          <img src={src} alt="Screenshot" className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" />
+                          <button
+                            onClick={() => removeScreenshot(index)}
+                            className="absolute top-1 right-1 bg-red-600 text-white p-0.5 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                      {/* Add more button */}
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="aspect-[9/16] border border-zinc-800 border-dashed flex flex-col items-center justify-center gap-2 text-zinc-600 hover:text-zinc-400 hover:border-zinc-600 transition-all"
+                      >
+                        <Upload className="w-4 h-4" />
+                        <span className="text-[9px] font-mono uppercase">ADD MORE</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full h-32 border border-zinc-700 border-dashed bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-500 transition-all flex flex-col items-center justify-center gap-3 group"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center group-hover:bg-zinc-700 transition-colors">
+                        <Upload className="w-5 h-5 text-zinc-400 group-hover:text-white" />
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs font-mono text-zinc-300 uppercase tracking-wider mb-1">UPLOAD SCREENSHOTS</div>
+                        <div className="text-[10px] text-zinc-500 font-mono">Tap to browse or drop files</div>
+                      </div>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Text Input (Secondary) */}
+              <div>
+                <label className="label-sm text-zinc-500 mb-2 block">OR PASTE TEXT (FOR CONTEXT)</label>
                 <textarea
                   value={theirMessage}
                   onChange={(e) => setTheirMessage(e.target.value)}
-                  placeholder="PASTE WHAT THEY SENT... (the audacity)"
-                  className="w-full bg-zinc-900 border border-zinc-700 p-4 text-white placeholder:text-zinc-500/60 resize-none focus:outline-none focus:border-white transition-colors h-32 font-mono text-sm"
+                  placeholder={screenshots.length > 0 ? "Add any extra context about the screenshots..." : "If you don't have screenshots, paste the text here..."}
+                  className="w-full bg-zinc-900 border border-zinc-700 p-4 text-white placeholder:text-zinc-500/60 resize-none focus:outline-none focus:border-white transition-colors h-24 font-mono text-sm"
                 />
               </div>
 
@@ -216,8 +297,8 @@ export const QuickAdvisor: React.FC<QuickAdvisorProps> = ({ onBack, userProfile 
                       key={opt.value}
                       onClick={() => setContext(opt.value)}
                       className={`py-2 md:py-3 px-1 md:px-4 border text-[8px] md:text-[10px] font-mono tracking-wider transition-all ${context === opt.value
-                          ? 'bg-white text-black border-white'
-                          : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500 hover:text-zinc-300'
+                        ? 'bg-white text-black border-white'
+                        : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500 hover:text-zinc-300'
                         }`}
                     >
                       {opt.label}
@@ -232,10 +313,10 @@ export const QuickAdvisor: React.FC<QuickAdvisorProps> = ({ onBack, userProfile 
               {/* Submit Button */}
               <button
                 onClick={handleAnalyze}
-                disabled={!theirMessage.trim() || isLoading}
-                className={`w-full py-5 font-impact text-2xl uppercase tracking-wide border transition-all ${!theirMessage.trim() || isLoading
-                    ? 'bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed'
-                    : 'bg-white text-black border-white hover:bg-zinc-200'
+                disabled={(!theirMessage.trim() && screenshots.length === 0) || isLoading}
+                className={`w-full py-5 font-impact text-2xl uppercase tracking-wide border transition-all ${(!theirMessage.trim() && screenshots.length === 0) || isLoading
+                  ? 'bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed'
+                  : 'bg-white text-black border-white hover:bg-zinc-200'
                   }`}
               >
                 {isLoading ? (
@@ -256,7 +337,7 @@ export const QuickAdvisor: React.FC<QuickAdvisorProps> = ({ onBack, userProfile 
 
   // Results View
   return (
-    <div className="h-full w-full flex flex-col bg-matte-base relative overflow-y-auto">
+    <div className="h-full w-full flex flex-col bg-matte-base relative overflow-y-auto scrollbar-hide">
       {/* Background */}
       <div className="absolute inset-0 bg-topo-pattern opacity-5 pointer-events-none"></div>
       <div className="absolute inset-0 bg-scan-lines opacity-10 pointer-events-none"></div>
@@ -307,7 +388,7 @@ export const QuickAdvisor: React.FC<QuickAdvisorProps> = ({ onBack, userProfile 
                 <div className="h-1 bg-zinc-800 relative">
                   <div
                     className={`h-full transition-all ${result.vibeCheck.interestLevel >= 70 ? 'bg-white' :
-                        result.vibeCheck.interestLevel >= 40 ? 'bg-hard-gold' : 'bg-hard-blue'
+                      result.vibeCheck.interestLevel >= 40 ? 'bg-hard-gold' : 'bg-hard-blue'
                       }`}
                     style={{ width: `${result.vibeCheck.interestLevel}%` }}
                   />
@@ -342,7 +423,7 @@ export const QuickAdvisor: React.FC<QuickAdvisorProps> = ({ onBack, userProfile 
                     YOUR DRAFT {result.draftAnalysis.confidenceScore < 40 && <span className="text-red-500">// DON'T SEND THIS</span>}
                   </div>
                   <div className={`text-3xl font-impact ${result.draftAnalysis.confidenceScore >= 70 ? 'text-white' :
-                      result.draftAnalysis.confidenceScore >= 40 ? 'text-hard-gold' : 'text-red-500'
+                    result.draftAnalysis.confidenceScore >= 40 ? 'text-hard-gold' : 'text-red-500'
                     }`}>
                     {result.draftAnalysis.confidenceScore}%
                   </div>
@@ -350,8 +431,8 @@ export const QuickAdvisor: React.FC<QuickAdvisorProps> = ({ onBack, userProfile 
 
                 {/* Show user's actual draft */}
                 <div className={`border p-3 mb-4 ${result.draftAnalysis.confidenceScore < 40
-                    ? 'bg-red-950/30 border-red-900/50'
-                    : 'bg-black/50 border-zinc-800'
+                  ? 'bg-red-950/30 border-red-900/50'
+                  : 'bg-black/50 border-zinc-800'
                   }`}>
                   <p className="text-zinc-300 text-sm font-mono italic">"{yourDraft}"</p>
                 </div>
@@ -410,12 +491,12 @@ export const QuickAdvisor: React.FC<QuickAdvisorProps> = ({ onBack, userProfile 
                       onClick={() => handleFeedback('smooth', rating)}
                       disabled={!!feedbackGiven['smooth']}
                       className={`px-3 py-2 text-sm font-mono uppercase tracking-wider border transition-all min-w-[44px] min-h-[44px] flex items-center justify-center ${feedbackGiven['smooth'] === rating
-                          ? rating === 'helpful' ? 'bg-emerald-900/50 border-emerald-500 text-emerald-400' :
-                            rating === 'mid' ? 'bg-yellow-900/50 border-yellow-500 text-yellow-400' :
-                              'bg-red-900/50 border-red-500 text-red-400'
-                          : feedbackGiven['smooth']
-                            ? 'border-zinc-800 text-zinc-700 cursor-not-allowed'
-                            : 'border-zinc-700 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
+                        ? rating === 'helpful' ? 'bg-emerald-900/50 border-emerald-500 text-emerald-400' :
+                          rating === 'mid' ? 'bg-yellow-900/50 border-yellow-500 text-yellow-400' :
+                            'bg-red-900/50 border-red-500 text-red-400'
+                        : feedbackGiven['smooth']
+                          ? 'border-zinc-800 text-zinc-700 cursor-not-allowed'
+                          : 'border-zinc-700 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
                         }`}
                     >
                       {rating === 'helpful' ? '+' : rating === 'mid' ? '○' : '-'}
@@ -449,12 +530,12 @@ export const QuickAdvisor: React.FC<QuickAdvisorProps> = ({ onBack, userProfile 
                       onClick={() => handleFeedback('bold', rating)}
                       disabled={!!feedbackGiven['bold']}
                       className={`px-3 py-2 text-sm font-mono uppercase tracking-wider border transition-all min-w-[44px] min-h-[44px] flex items-center justify-center ${feedbackGiven['bold'] === rating
-                          ? rating === 'helpful' ? 'bg-emerald-900/50 border-emerald-500 text-emerald-400' :
-                            rating === 'mid' ? 'bg-yellow-900/50 border-yellow-500 text-yellow-400' :
-                              'bg-red-900/50 border-red-500 text-red-400'
-                          : feedbackGiven['bold']
-                            ? 'border-zinc-800 text-zinc-700 cursor-not-allowed'
-                            : 'border-zinc-700 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
+                        ? rating === 'helpful' ? 'bg-emerald-900/50 border-emerald-500 text-emerald-400' :
+                          rating === 'mid' ? 'bg-yellow-900/50 border-yellow-500 text-yellow-400' :
+                            'bg-red-900/50 border-red-500 text-red-400'
+                        : feedbackGiven['bold']
+                          ? 'border-zinc-800 text-zinc-700 cursor-not-allowed'
+                          : 'border-zinc-700 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
                         }`}
                     >
                       {rating === 'helpful' ? '+' : rating === 'mid' ? '○' : '-'}
@@ -488,12 +569,12 @@ export const QuickAdvisor: React.FC<QuickAdvisorProps> = ({ onBack, userProfile 
                       onClick={() => handleFeedback('authentic', rating)}
                       disabled={!!feedbackGiven['authentic']}
                       className={`px-3 py-2 text-sm font-mono uppercase tracking-wider border transition-all min-w-[44px] min-h-[44px] flex items-center justify-center ${feedbackGiven['authentic'] === rating
-                          ? rating === 'helpful' ? 'bg-emerald-900/50 border-emerald-500 text-emerald-400' :
-                            rating === 'mid' ? 'bg-yellow-900/50 border-yellow-500 text-yellow-400' :
-                              'bg-red-900/50 border-red-500 text-red-400'
-                          : feedbackGiven['authentic']
-                            ? 'border-zinc-800 text-zinc-700 cursor-not-allowed'
-                            : 'border-zinc-700 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
+                        ? rating === 'helpful' ? 'bg-emerald-900/50 border-emerald-500 text-emerald-400' :
+                          rating === 'mid' ? 'bg-yellow-900/50 border-yellow-500 text-yellow-400' :
+                            'bg-red-900/50 border-red-500 text-red-400'
+                        : feedbackGiven['authentic']
+                          ? 'border-zinc-800 text-zinc-700 cursor-not-allowed'
+                          : 'border-zinc-700 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
                         }`}
                     >
                       {rating === 'helpful' ? '+' : rating === 'mid' ? '○' : '-'}

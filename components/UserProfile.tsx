@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, Circle, Upload, Image, X, AlertTriangle, Sparkles, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Circle, Upload, Image, X, AlertTriangle, Sparkles, ArrowRight, User } from 'lucide-react';
 import { UserStyleProfile, StyleExtractionResponse, AIExtractedStyleProfile } from '../types';
 import { extractUserStyle } from '../services/geminiService';
 
@@ -17,16 +17,16 @@ const CornerNodes = ({ className }: { className?: string }) => (
       <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 text-zinc-600 text-[8px]">+</div>
     </div>
     <div className="absolute top-0 right-0">
-       <div className="w-2 h-2 border-t border-r border-zinc-500"></div>
-       <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 text-zinc-600 text-[8px]">+</div>
+      <div className="w-2 h-2 border-t border-r border-zinc-500"></div>
+      <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 text-zinc-600 text-[8px]">+</div>
     </div>
     <div className="absolute bottom-0 left-0">
-       <div className="w-2 h-2 border-b border-l border-zinc-500"></div>
-       <div className="absolute bottom-0 left-0 -translate-x-1/2 translate-y-1/2 text-zinc-600 text-[8px]">+</div>
+      <div className="w-2 h-2 border-b border-l border-zinc-500"></div>
+      <div className="absolute bottom-0 left-0 -translate-x-1/2 translate-y-1/2 text-zinc-600 text-[8px]">+</div>
     </div>
     <div className="absolute bottom-0 right-0">
-       <div className="w-2 h-2 border-b border-r border-zinc-500"></div>
-       <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 text-zinc-600 text-[8px]">+</div>
+      <div className="w-2 h-2 border-b border-r border-zinc-500"></div>
+      <div className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 text-zinc-600 text-[8px]">+</div>
     </div>
   </div>
 );
@@ -44,9 +44,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
   });
 
   // Sample texts for analysis
-  const [sampleTexts, setSampleTexts] = useState<string[]>(['', '', '']);
+  const [sampleTexts, setSampleTexts] = useState<string[]>(['', '', '', '', '', '']);
   const [screenshots, setScreenshots] = useState<string[]>([]);
-  const [inputMode, setInputMode] = useState<'text' | 'screenshots'>('text');
+  // inputMode removed - consolidated interface
   const [currentStep, setCurrentStep] = useState<'intro' | 'samples' | 'review'>('intro');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<StyleExtractionResponse | null>(null);
@@ -66,10 +66,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
     if (!files) return;
 
     const fileArray = Array.from(files).slice(0, 5) as File[]; // Max 5 files
-    
+
     fileArray.forEach((file: File) => {
       if (!file.type.startsWith('image/')) return;
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         const base64 = (e.target?.result as string)?.split(',')[1];
@@ -89,49 +89,49 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
   // AI-powered analysis
   const analyzeWithAI = useCallback(async () => {
     setIsAnalyzing(true);
-    
+
     try {
       const result = await extractUserStyle({
-        screenshots: inputMode === 'screenshots' ? screenshots : undefined,
-        sampleTexts: inputMode === 'text' ? sampleTexts.filter(t => t.trim()) : undefined
+        screenshots: screenshots.length > 0 ? screenshots : undefined,
+        sampleTexts: sampleTexts.filter(t => t.trim()).length > 0 ? sampleTexts.filter(t => t.trim()) : undefined
       });
-      
+
       setAnalysisResult(result);
-      
+
       // Map the AI response to our profile format
       const aiProfile: AIExtractedStyleProfile = result.profile;
       setProfile({
-        emojiUsage: aiProfile.emojiFrequency === 'heavy' ? 'heavy' : 
-                    aiProfile.emojiFrequency === 'moderate' ? 'moderate' :
-                    aiProfile.emojiFrequency === 'light' ? 'minimal' : 'none',
+        emojiUsage: aiProfile.emojiFrequency === 'heavy' ? 'heavy' :
+          aiProfile.emojiFrequency === 'moderate' ? 'moderate' :
+            aiProfile.emojiFrequency === 'light' ? 'minimal' : 'none',
         capitalization: aiProfile.capitalization === 'always_lowercase' ? 'lowercase' :
-                       aiProfile.capitalization === 'proper_grammar' ? 'normal' : 'mixed',
+          aiProfile.capitalization === 'proper_grammar' ? 'normal' : 'mixed',
         punctuation: aiProfile.punctuation === 'standard' ? 'full' :
-                    (aiProfile.punctuation === 'light' || aiProfile.punctuation === 'minimal') ? 'minimal' : 'none',
+          (aiProfile.punctuation === 'light' || aiProfile.punctuation === 'minimal') ? 'minimal' : 'none',
         averageLength: aiProfile.messageLengthTendency,
         slangLevel: aiProfile.commonPhrases.length > 3 ? 'heavy-slang' :
-                   aiProfile.commonPhrases.length > 0 ? 'casual' : 'formal',
+          aiProfile.commonPhrases.length > 0 ? 'casual' : 'formal',
         signaturePatterns: [...aiProfile.commonPhrases, ...aiProfile.favoriteEmojis].slice(0, 6),
         preferredTone: aiProfile.energyLevel === 'hype' ? 'playful' :
-                      aiProfile.energyLevel === 'dry' ? 'direct' : 'chill',
+          aiProfile.energyLevel === 'dry' ? 'direct' : 'chill',
         aiSummary: result.summary
       });
-      
+
       setCurrentStep('review');
     } catch (error) {
       console.error('Analysis failed:', error);
     } finally {
       setIsAnalyzing(false);
     }
-  }, [inputMode, screenshots, sampleTexts]);
+  }, [screenshots, sampleTexts]);
 
   // Simple heuristic analyzer (fallback)
   const analyzeTexts = useCallback(() => {
     setIsAnalyzing(true);
-    
+
     // Combine all non-empty texts
     const allText = sampleTexts.filter(t => t.trim()).join(' ');
-    
+
     if (!allText.trim()) {
       setIsAnalyzing(false);
       return;
@@ -140,34 +140,34 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
     // Count emojis
     const emojiCount = (allText.match(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]/gu) || []).length;
     const emojiDensity = emojiCount / Math.max(1, allText.length / 100);
-    
+
     // Detect capitalization
     const upperCount = (allText.match(/[A-Z]/g) || []).length;
     const lowerCount = (allText.match(/[a-z]/g) || []).length;
     const capRatio = upperCount / Math.max(1, upperCount + lowerCount);
-    
+
     // Count punctuation
     const punctCount = (allText.match(/[.!?,;:]/g) || []).length;
     const punctDensity = punctCount / Math.max(1, allText.split(/\s+/).length);
-    
+
     // Avg message length
     const validTexts = sampleTexts.filter(t => t.trim());
     const avgLen = validTexts.reduce((sum, t) => sum + t.length, 0) / Math.max(1, validTexts.length);
-    
+
     // Detect slang
     const slangWords = ['fr', 'ngl', 'tbh', 'lowkey', 'highkey', 'bet', 'no cap', 'idk', 'idc', 'lol', 'lmao', 'bruh', 'bestie'];
     const slangCount = slangWords.reduce((count, word) => {
       const regex = new RegExp(`\\b${word}\\b`, 'gi');
       return count + (allText.match(regex) || []).length;
     }, 0);
-    
+
     // Detect signature patterns
     const patterns: string[] = [];
     if (allText.includes('haha')) patterns.push('haha');
     if (allText.includes('lol')) patterns.push('lol');
     if (allText.includes('...')) patterns.push('...');
     if (allText.includes('!!')) patterns.push('!!');
-    
+
     // Build profile
     const analyzed: UserStyleProfile = {
       emojiUsage: emojiDensity > 2 ? 'heavy' : emojiDensity > 0.5 ? 'moderate' : emojiDensity > 0 ? 'minimal' : 'none',
@@ -178,7 +178,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
       signaturePatterns: patterns,
       preferredTone: 'chill' // Default, user can adjust
     };
-    
+
     setProfile(analyzed);
     setCurrentStep('review');
     setIsAnalyzing(false);
@@ -195,19 +195,17 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
   };
 
   // Check if we have enough input to analyze
-  const canAnalyze = inputMode === 'screenshots' 
-    ? screenshots.length >= 1
-    : sampleTexts[0]?.trim() && sampleTexts[1]?.trim();
+  const canAnalyze = sampleTexts.some(t => t.trim()) || screenshots.length > 0;
 
   // Intro Screen
   if (currentStep === 'intro') {
     return (
-      <div className="h-full w-full flex flex-col bg-matte-base relative overflow-hidden">
+      <div className="h-full w-full flex flex-col bg-matte-base relative overflow-hidden scrollbar-hide">
         <div className="absolute inset-0 bg-topo-pattern opacity-5 pointer-events-none"></div>
-        
+
         {/* Header */}
         <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between relative z-10">
-          <button 
+          <button
             onClick={onBack}
             className="flex items-center gap-3 text-zinc-500 hover:text-white transition-colors group"
           >
@@ -222,15 +220,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
 
         {/* Content */}
         <div className="flex-1 flex items-center justify-center p-6 relative z-10">
-          <div className="max-w-xl w-full">
-            <div className="bg-zinc-900 border border-zinc-800 relative">
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="bg-zinc-900 border border-zinc-800 relative max-w-2xl w-full">
               <CornerNodes />
               <div className="p-8 md:p-12">
                 <div className="text-center space-y-6">
                   <div className="w-16 h-16 mx-auto bg-hard-gold/10 border border-hard-gold flex items-center justify-center">
                     <Circle className="w-8 h-8" />
                   </div>
-                  
+
                   <div>
                     <div className="label-sm text-hard-gold mb-2">YOUR ENERGY</div>
                     <h2 className="text-4xl font-impact text-white uppercase tracking-tight mb-3">TEACH ME YOUR VOICE</h2>
@@ -272,12 +270,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
   // Samples Collection Screen
   if (currentStep === 'samples') {
     return (
-      <div className="h-full w-full flex flex-col bg-matte-base relative overflow-y-auto">
+      <div className="h-full w-full flex flex-col bg-matte-base relative overflow-y-auto scrollbar-hide">
         <div className="absolute inset-0 bg-topo-pattern opacity-5 pointer-events-none"></div>
-        
+
         {/* Header */}
         <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between relative z-30 sticky top-0 bg-matte-base/95 backdrop-blur-sm">
-          <button 
+          <button
             onClick={() => setCurrentStep('intro')}
             className="flex items-center gap-3 text-zinc-500 hover:text-white transition-colors group"
           >
@@ -289,155 +287,128 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
 
         {/* Content */}
         <div className="flex-1 p-6 md:p-10 relative z-10">
-          <div className="max-w-3xl mx-auto space-y-6">
-            <div>
-              <div className="label-sm text-hard-gold mb-2">SAMPLE DROP</div>
-              <h2 className="text-3xl md:text-4xl font-impact text-white uppercase tracking-tight">DROP YOUR RECEIPTS</h2>
-              <p className="text-zinc-500 text-sm mt-2">show me how you text - screenshots or raw text, dealer's choice</p>
+          <div className="max-w-6xl mx-auto space-y-12">
+
+            {/* Intro */}
+            <div className="text-center mb-8">
+              <div className="label-sm text-hard-gold mb-2">STYLE QUIZ</div>
+              <h2 className="text-3xl md:text-4xl font-impact text-white uppercase tracking-tight">PROVE YOU'RE NOT AN NPC</h2>
+              <p className="text-zinc-500 text-sm mt-2">answer these prompts in your natural texting voice.</p>
             </div>
 
-            {/* Input Mode Toggle */}
-            <div className="flex border border-zinc-700">
-              <button
-                onClick={() => setInputMode('screenshots')}
-                className={`flex-1 py-3 px-4 text-[10px] font-mono uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
-                  inputMode === 'screenshots'
-                    ? 'bg-white text-black'
-                    : 'bg-transparent text-zinc-500 hover:text-white'
-                }`}
-              >
-                <Image className="w-4 h-4" /> SCREENSHOTS
-              </button>
-              <button
-                onClick={() => setInputMode('text')}
-                className={`flex-1 py-3 px-4 text-[10px] font-mono uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
-                  inputMode === 'text'
-                    ? 'bg-white text-black'
-                    : 'bg-transparent text-zinc-500 hover:text-white'
-                }`}
-              >
-                <Upload className="w-4 h-4" /> PASTE TEXT
-              </button>
+            {/* Quiz Questions */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+              {[
+                { scenario: "THE MATCH (FIRST IMPRESSION)", text: "so... what's your story? give me the lore." },
+                { scenario: "THE HOT TAKE (BANTER CHECK)", text: "unpopular opinion: pineapple belongs on pizza. judge me." },
+                { scenario: "THE VENT (EMPATHY CHECK)", text: "honestly having the worst day rn. my boss is actually insane." },
+                { scenario: "THE VIBE CHECK (VALIDATION)", text: "lol that's actually hilarious 💀 i'm dead." },
+                { scenario: "THE PLAN (MAKING MOVES)", text: "so... wyd this weekend? any big plans?" },
+                { scenario: "THE CLIFFHANGER (CURIOSITY)", text: "wait i have a random question for u" }
+              ].map((item, index) => (
+                <div key={index} className="space-y-3 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${index * 100}ms` }}>
+                  <div className="space-y-1.5">
+                    <div className="ml-11 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">{item.scenario}</div>
+                    <div className="flex items-end gap-3">
+                      <div className="w-8 h-8 bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-500 shrink-0">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <div className="bg-zinc-800 text-zinc-300 p-4 rounded-2xl rounded-bl-none max-w-[85%] text-sm border border-zinc-700 relative">
+                        {item.text}
+                        <div className="absolute bottom-0 left-[-6px] w-0 h-0 border-l-[6px] border-l-transparent border-b-[6px] border-b-zinc-700"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <div className="w-full max-w-[90%] relative">
+                      <textarea
+                        value={sampleTexts[index]}
+                        onChange={(e) => handleSampleChange(index, e.target.value)}
+                        className="w-full bg-black border border-zinc-700 p-4 text-white text-sm rounded-2xl rounded-br-none focus:border-white focus:outline-none min-h-[80px] resize-none placeholder:text-zinc-700"
+                        placeholder="Type your response..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* Screenshot Upload Mode */}
-            {inputMode === 'screenshots' && (
-              <div className="space-y-4">
-                {/* Hidden file input */}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                />
-                
-                {/* Upload Area */}
-                <div 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-zinc-700 hover:border-zinc-500 transition-colors p-8 cursor-pointer"
-                >
-                  <div className="text-center space-y-3">
-                    <Image className="w-8 h-8" />
-                    <div className="text-white font-mono text-sm">TAP TO UPLOAD SCREENSHOTS</div>
-                    <div className="text-zinc-500 text-xs">screenshots of your iMessage / WhatsApp / IG chats</div>
-                    <div className="text-zinc-600 text-[10px] font-mono uppercase">MAX 5 IMAGES • PNG/JPG</div>
+            {/* Divider */}
+            <div className="relative py-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-zinc-800"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-matte-base px-4 text-[10px] font-mono uppercase text-zinc-500 tracking-widest">WANT MORE ACCURACY?</span>
+              </div>
+            </div>
+
+            {/* Screenshot Upload (Compact) */}
+            <div className="bg-zinc-900/50 border border-dashed border-zinc-800 p-6 hover:border-zinc-600 transition-colors">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-zinc-800 flex items-center justify-center rounded-full shrink-0">
+                    <Image className="w-5 h-5 text-zinc-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-white font-bold text-sm uppercase tracking-wide">UPLOAD RECEIPTS</h4>
+                    <p className="text-zinc-500 text-xs mt-1">Add screenshots for deeper analysis (optional)</p>
                   </div>
                 </div>
 
-                {/* Uploaded Screenshots Preview */}
-                {screenshots.length > 0 && (
-                  <div className="space-y-3">
-                    <div className="label-sm text-zinc-400">UPLOADED ({screenshots.length}/5)</div>
-                    <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-                      {screenshots.map((base64, index) => (
-                        <div key={index} className="relative group">
-                          <img 
-                            src={`data:image/png;base64,${base64}`}
-                            alt={`Screenshot ${index + 1}`}
-                            className="w-full aspect-[9/16] object-cover border border-zinc-700"
-                          />
-                          <button
-                            onClick={() => removeScreenshot(index)}
-                            className="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 py-1 text-center text-[8px] font-mono text-zinc-400">
-                            #{index + 1}
-                          </div>
-                        </div>
-                      ))}
+                <div className="flex flex-col items-end gap-3 w-full md:w-auto">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-6 py-2 bg-zinc-800 text-white text-xs font-mono uppercase tracking-wider hover:bg-zinc-700 transition-colors border border-zinc-700"
+                  >
+                    CHOOSE FILES
+                  </button>
+                  {screenshots.length > 0 && (
+                    <div className="text-[10px] text-hard-gold font-mono">
+                      {screenshots.length} FILE{screenshots.length !== 1 ? 'S' : ''} SELECTED
                     </div>
-                  </div>
-                )}
-
-                {/* Tips for screenshots */}
-                <div className="bg-zinc-900 border border-zinc-800 p-5 relative">
-                  <CornerNodes className="opacity-30" />
-                  <div className="space-y-3">
-                    <div className="label-sm text-zinc-500">PRO TIPS:</div>
-                    <div className="space-y-2 text-sm text-zinc-400">
-                      <div className="flex items-start gap-2">
-                        <ArrowRight className="w-3 h-3 text-hard-gold" />
-                        <span>upload screenshots of convos where YOU were texting a lot</span>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <ArrowRight className="w-3 h-3 text-hard-gold" />
-                        <span>the ai reads your messages (usually the right/blue side)</span>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <ArrowRight className="w-3 h-3 text-hard-gold" />
-                        <span>more screenshots = more accurate style profile</span>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
-            )}
 
-            {/* Text Input Mode */}
-            {inputMode === 'text' && (
-              <div className="space-y-4">
-                {sampleTexts.map((text, index) => (
-                  <div key={index}>
-                    <label className="label-sm text-zinc-400 mb-2 block">
-                      SAMPLE {index + 1} {index > 1 && <span className="text-zinc-600">(OPTIONAL)</span>}
-                    </label>
-                    <textarea
-                      value={text}
-                      onChange={(e) => handleSampleChange(index, e.target.value)}
-                      placeholder={`DROP YOUR RECEIPTS ${index + 1}...`}
-                      className="w-full bg-zinc-900 border border-zinc-700 p-4 text-white placeholder:text-zinc-500/60 resize-none focus:outline-none focus:border-white transition-colors h-24 font-mono text-sm"
-                    />
-                  </div>
-                ))}
-
-                {/* Examples */}
-                <div className="bg-zinc-900 border border-zinc-800 p-5 relative">
-                  <CornerNodes className="opacity-30" />
-                  <div className="space-y-3">
-                    <div className="label-sm text-zinc-500">EXAMPLES OF GOOD SAMPLES:</div>
-                    <div className="space-y-2 text-sm text-zinc-400">
-                      <div className="border-l-2 border-zinc-700 pl-3">"yo wanna grab food later? kinda starving rn"</div>
-                      <div className="border-l-2 border-zinc-700 pl-3">"ngl that movie was mid af 💀"</div>
-                      <div className="border-l-2 border-zinc-700 pl-3">"bet see u at 8"</div>
+              {/* Preview Grid */}
+              {screenshots.length > 0 && (
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 mt-6 pt-6 border-t border-zinc-800/50">
+                  {screenshots.map((base64, index) => (
+                    <div key={index} className="relative group aspect-[9/16]">
+                      <img
+                        src={`data:image/png;base64,${base64}`}
+                        alt={`Screenshot ${index + 1}`}
+                        className="w-full h-full object-cover border border-zinc-700 opacity-70 group-hover:opacity-100 transition-opacity"
+                      />
+                      <button
+                        onClick={() => removeScreenshot(index)}
+                        className="absolute top-0 right-0 w-5 h-5 bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Action Button */}
             <button
               onClick={analyzeWithAI}
               disabled={!canAnalyze || isAnalyzing}
-              className={`w-full py-5 font-impact text-2xl uppercase tracking-wide border transition-all ${
-                !canAnalyze || isAnalyzing
-                  ? 'bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed'
-                  : 'bg-white text-black border-white hover:bg-zinc-200'
-              }`}
+              className={`w-full py-5 font-impact text-2xl uppercase tracking-wide border transition-all flex items-center justify-center gap-3 ${!canAnalyze || isAnalyzing
+                ? 'bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed'
+                : 'bg-white text-black border-white hover:bg-zinc-200'
+                }`}
             >
               {isAnalyzing ? (
                 <span className="flex items-center justify-center gap-3">
@@ -449,7 +420,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
             </button>
 
             {/* Quick option for text mode */}
-            {inputMode === 'text' && canAnalyze && (
+            {canAnalyze && (
               <button
                 onClick={analyzeTexts}
                 disabled={isAnalyzing}
@@ -466,12 +437,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
 
   // Review & Edit Screen
   return (
-    <div className="h-full w-full flex flex-col bg-matte-base relative overflow-y-auto">
+    <div className="h-full w-full flex flex-col bg-matte-base relative overflow-y-auto scrollbar-hide">
       <div className="absolute inset-0 bg-topo-pattern opacity-5 pointer-events-none"></div>
-      
+
       {/* Header */}
       <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between relative z-30 sticky top-0 bg-matte-base/95 backdrop-blur-sm">
-        <button 
+        <button
           onClick={() => setCurrentStep('samples')}
           className="flex items-center gap-3 text-zinc-500 hover:text-white transition-colors group"
         >
@@ -504,28 +475,27 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="text-[10px] font-mono text-zinc-500">CONFIDENCE</div>
-                    <div className={`px-2 py-1 text-[10px] font-mono font-bold ${
-                      analysisResult.confidence >= 70 ? 'bg-green-900/50 text-green-400 border border-green-700' :
+                    <div className={`px-2 py-1 text-[10px] font-mono font-bold ${analysisResult.confidence >= 70 ? 'bg-green-900/50 text-green-400 border border-green-700' :
                       analysisResult.confidence >= 40 ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-700' :
-                      'bg-red-900/50 text-red-400 border border-red-700'
-                    }`}>
+                        'bg-red-900/50 text-red-400 border border-red-700'
+                      }`}>
                       {analysisResult.confidence}%
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Summary - different styling for error vs success */}
                 <p className={`text-sm italic ${analysisResult.confidence === 0 ? 'text-red-300' : 'text-white'}`}>
                   "{analysisResult.summary}"
                 </p>
-                
+
                 {/* Show retry hint when AI fails */}
                 {analysisResult.confidence === 0 && (
                   <div className="text-[10px] font-mono text-zinc-500 border-t border-zinc-800 pt-3 mt-3">
                     ⚡ AI service temporarily unavailable. You can still manually configure your style below, or try again later.
                   </div>
                 )}
-                
+
                 {/* Detected Patterns */}
                 {analysisResult.extractedPatterns.length > 0 && (
                   <div>
@@ -550,21 +520,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
               <CornerNodes className="opacity-30" />
               <div>
                 <label className="label-sm text-zinc-400 mb-3 block">EMOJI USAGE</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {(['none', 'minimal', 'moderate', 'heavy'] as const).map((level) => (
-                    <button
-                      key={level}
-                      onClick={() => setProfile({ ...profile, emojiUsage: level })}
-                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${
-                        profile.emojiUsage === level
-                          ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
-                          : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
-                      }`}
-                    >
-                      {level}
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
 
@@ -578,11 +533,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
                     <button
                       key={level}
                       onClick={() => setProfile({ ...profile, capitalization: level })}
-                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${
-                        profile.capitalization === level
-                          ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
-                          : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
-                      }`}
+                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.capitalization === level
+                        ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
+                        : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
+                        }`}
                     >
                       {level}
                     </button>
@@ -601,11 +555,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
                     <button
                       key={level}
                       onClick={() => setProfile({ ...profile, punctuation: level })}
-                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${
-                        profile.punctuation === level
-                          ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
-                          : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
-                      }`}
+                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.punctuation === level
+                        ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
+                        : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
+                        }`}
                     >
                       {level}
                     </button>
@@ -624,11 +577,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
                     <button
                       key={level}
                       onClick={() => setProfile({ ...profile, averageLength: level })}
-                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${
-                        profile.averageLength === level
-                          ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
-                          : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
-                      }`}
+                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.averageLength === level
+                        ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
+                        : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
+                        }`}
                     >
                       {level}
                     </button>
@@ -647,11 +599,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
                     <button
                       key={level}
                       onClick={() => setProfile({ ...profile, slangLevel: level })}
-                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${
-                        profile.slangLevel === level
-                          ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
-                          : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
-                      }`}
+                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.slangLevel === level
+                        ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
+                        : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
+                        }`}
                     >
                       {level === 'heavy-slang' ? 'HEAVY' : level}
                     </button>
@@ -670,11 +621,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
                     <button
                       key={tone}
                       onClick={() => setProfile({ ...profile, preferredTone: tone })}
-                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${
-                        profile.preferredTone === tone
-                          ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
-                          : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
-                      }`}
+                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.preferredTone === tone
+                        ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
+                        : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
+                        }`}
                     >
                       {tone}
                     </button>
@@ -711,5 +661,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
         </div>
       </div>
     </div>
+
   );
 };
