@@ -75,6 +75,32 @@ export const Simulator: React.FC<SimulatorProps> = ({ userProfile, firebaseUid, 
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Load chat history from localStorage when persona changes
+  useEffect(() => {
+    if (activePersona?.name) {
+      const storageKey = `unsend_sim_history_${activePersona.name.replace(/\s+/g, '_')}`;
+      const savedHistory = localStorage.getItem(storageKey);
+      if (savedHistory) {
+        try {
+          setSimHistory(JSON.parse(savedHistory));
+        } catch (e) {
+          console.error('Failed to load chat history:', e);
+          setSimHistory([]);
+        }
+      } else {
+        setSimHistory([]);
+      }
+    }
+  }, [activePersona?.name]);
+
+  // Save chat history to localStorage when it changes
+  useEffect(() => {
+    if (activePersona?.name && simHistory.length > 0) {
+      const storageKey = `unsend_sim_history_${activePersona.name.replace(/\s+/g, '_')}`;
+      localStorage.setItem(storageKey, JSON.stringify(simHistory));
+    }
+  }, [simHistory, activePersona?.name]);
+
   useEffect(() => {
     if (view === 'chat') {
       chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -410,6 +436,32 @@ export const Simulator: React.FC<SimulatorProps> = ({ userProfile, firebaseUid, 
                     <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleFileChange} />
                     {previewUrls.length > 0 && <span className="text-[10px] font-bold text-hard-blue border border-hard-blue/30 px-2 py-0.5 rounded-sm">{previewUrls.length} FILES</span>}
                   </div>
+                  
+                  {/* Screenshot Previews with Remove */}
+                  {previewUrls.length > 0 && (
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 mt-3">
+                      {previewUrls.map((url, index) => (
+                        <div key={index} className="relative group aspect-[9/16] bg-zinc-800 border border-zinc-700 overflow-hidden">
+                          <img
+                            src={url}
+                            alt={`Screenshot ${index + 1}`}
+                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+                              setScreenshots(prev => prev.filter((_, i) => i !== index));
+                            }}
+                            className="absolute top-1 right-1 w-5 h-5 bg-red-600 hover:bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-sm"
+                          >
+                            <span className="text-xs font-bold">×</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <button

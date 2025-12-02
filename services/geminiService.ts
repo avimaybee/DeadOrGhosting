@@ -126,7 +126,7 @@ export const simulateDraft = async (
   let userStyleContext = '';
   if (userStyle) {
     userStyleContext = `
-    USER'S PERSONAL TEXTING STYLE (Match this for the "you" suggestion):
+    USER'S PERSONAL TEXTING STYLE (Match this for the "you" suggestion without compromising authenticity. authenticity is priority):
     - Emoji use: ${userStyle.emojiUsage}
     - Caps style: ${userStyle.capitalization}
     - Punctuation: ${userStyle.punctuation}
@@ -135,7 +135,13 @@ export const simulateDraft = async (
     - Their signature patterns: ${userStyle.signaturePatterns.join(', ') || 'none'}
     - Preferred tone: ${userStyle.preferredTone}
     
-    CRITICAL: One rewrite option should sound EXACTLY like the user but smoother.
+    CRITICAL FOR "YOU" SUGGESTION:
+    - Sound EXACTLY like the user would naturally type - don't add extra flair or slang they don't use
+    - If they're casual and simple, keep it casual and simple
+    - DON'T make it more elaborate or add phrases they wouldn't use
+    - Match their exact length preference - if they text short, keep it short
+    - Only use emojis if they naturally use emojis
+    - The goal is their authentic voice, just slightly polished - NOT a complete rewrite
     `;
   }
 
@@ -243,7 +249,7 @@ export const simulateDraft = async (
         "safe": "string (authentic, cant go wrong - matches their energy)",
         "bold": "string (confident, shows genuine interest)", 
         "spicy": "string (playful, flirty - adds some tension)",
-        "you": "string (sounds exactly like the user but smoother - their vibe upgraded)${userStyle ? '' : ' - if no user style provided, make this natural and warm'}"
+        "you": "string (MUST sound exactly like what the user would naturally type. Keep the same length, same vibe, same casualness. Just fix any awkwardness. If user is simple, be simple. DO NOT add extra slang, emojis, or phrases they wouldn't use. Less is more.)"
       }
     }
     
