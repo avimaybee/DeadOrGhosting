@@ -70,14 +70,14 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
       if (initialProfile.aiSummary) {
         setAnalysisResult({
           profile: {
-            capitalization: initialProfile.capitalization === 'lowercase' ? 'always_lowercase' : 
+            capitalization: initialProfile.capitalization === 'lowercase' ? 'always_lowercase' :
               initialProfile.capitalization === 'normal' ? 'proper_grammar' : 'sometimes_caps',
             punctuation: initialProfile.punctuation,
             emojiFrequency: initialProfile.emojiUsage,
             favoriteEmojis: initialProfile.favoriteEmojis || [],
             commonPhrases: initialProfile.signaturePatterns.filter(p => !p.match(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]/gu)),
             messageLengthTendency: initialProfile.averageLength,
-            energyLevel: initialProfile.preferredTone === 'playful' ? 'hype' : 
+            energyLevel: initialProfile.preferredTone === 'playful' ? 'hype' :
               initialProfile.preferredTone === 'direct' ? 'dry' : 'chill',
             openerStyle: 'casual',
             closerStyle: 'natural'
@@ -245,9 +245,16 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
             <ArrowLeft className="w-4 h-4" />
             <span className="text-[10px] font-mono uppercase tracking-widest group-hover:text-hard-gold transition-colors">BACK</span>
           </button>
-          <div className="flex items-center gap-3">
-            <div className="w-1.5 h-1.5 bg-hard-gold animate-pulse"></div>
-            <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">YOUR_STYLE</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-1.5 h-1.5 bg-hard-gold animate-pulse"></div>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">YOUR_STYLE</span>
+            </div>
+            {onSignOut && (
+              <button onClick={onSignOut} className="text-zinc-500 hover:text-red-400 transition-colors">
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -325,6 +332,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
               >
                 <span className="text-[10px] font-mono uppercase tracking-widest group-hover:text-hard-gold transition-colors">SKIP TO REVIEW</span>
                 <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+            {onSignOut && (
+              <button onClick={onSignOut} className="text-zinc-500 hover:text-red-400 transition-colors ml-2">
+                <LogOut className="w-4 h-4" />
               </button>
             )}
           </div>
@@ -494,7 +506,14 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
           <ArrowLeft className="w-4 h-4" />
           <span className="text-[10px] font-mono uppercase tracking-widest group-hover:text-hard-gold transition-colors">EDIT SAMPLES</span>
         </button>
-        <div className="label-sm text-zinc-500">STEP 2 OF 2</div>
+        <div className="flex items-center gap-4">
+          <div className="label-sm text-zinc-500">STEP 2 OF 2</div>
+          {onSignOut && (
+            <button onClick={onSignOut} className="text-zinc-500 hover:text-red-400 transition-colors">
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Content - 2 Column Layout */}
@@ -509,7 +528,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
 
           {/* Two Column Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-            
+
             {/* LEFT COLUMN - AI Analysis & Account */}
             <div className="space-y-6">
               {/* AI Analysis Summary (if available) */}
@@ -590,9 +609,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         {authUser.photoURL ? (
-                          <img 
-                            src={authUser.photoURL} 
-                            alt="" 
+                          <img
+                            src={authUser.photoURL}
+                            alt=""
                             className="w-12 h-12 rounded-full border-2 border-zinc-700"
                           />
                         ) : (
@@ -629,152 +648,152 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
 
             {/* RIGHT COLUMN - Style Settings */}
             <div className="space-y-4">
-            {/* Emoji Usage */}
-            <div className="bg-zinc-900 border border-zinc-800 p-6 relative">
-              <CornerNodes className="opacity-30" />
-              <div>
-                <label className="label-sm text-zinc-400 mb-3 block">EMOJI USAGE</label>
-                {/* Display extracted emojis from user's samples */}
-                {profile.favoriteEmojis && profile.favoriteEmojis.length > 0 && (
-                  <div className="mb-4">
-                    <div className="text-[10px] font-mono text-zinc-500 uppercase mb-2">YOUR EMOJIS</div>
-                    <div className="flex flex-wrap gap-2">
-                      {profile.favoriteEmojis.map((emoji, i) => (
-                        <span key={i} className="text-2xl bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700 hover:border-hard-gold transition-colors">
-                          {emoji}
-                        </span>
-                      ))}
+              {/* Emoji Usage */}
+              <div className="bg-zinc-900 border border-zinc-800 p-6 relative">
+                <CornerNodes className="opacity-30" />
+                <div>
+                  <label className="label-sm text-zinc-400 mb-3 block">EMOJI USAGE</label>
+                  {/* Display extracted emojis from user's samples */}
+                  {profile.favoriteEmojis && profile.favoriteEmojis.length > 0 && (
+                    <div className="mb-4">
+                      <div className="text-[10px] font-mono text-zinc-500 uppercase mb-2">YOUR EMOJIS</div>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.favoriteEmojis.map((emoji, i) => (
+                          <span key={i} className="text-2xl bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700 hover:border-hard-gold transition-colors">
+                            {emoji}
+                          </span>
+                        ))}
+                      </div>
                     </div>
+                  )}
+                  {/* Frequency selector */}
+                  <div className="text-[10px] font-mono text-zinc-500 uppercase mb-2">FREQUENCY</div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {(['none', 'minimal', 'moderate', 'heavy'] as const).map((level) => (
+                      <button
+                        key={level}
+                        onClick={() => setProfile({ ...profile, emojiUsage: level })}
+                        className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.emojiUsage === level
+                          ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
+                          : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
+                          }`}
+                      >
+                        {level === 'none' ? '😐 NONE' : level === 'minimal' ? '🙂 MIN' : level === 'moderate' ? '😊 MOD' : '🤩 HEAVY'}
+                      </button>
+                    ))}
                   </div>
-                )}
-                {/* Frequency selector */}
-                <div className="text-[10px] font-mono text-zinc-500 uppercase mb-2">FREQUENCY</div>
-                <div className="grid grid-cols-4 gap-2">
-                  {(['none', 'minimal', 'moderate', 'heavy'] as const).map((level) => (
-                    <button
-                      key={level}
-                      onClick={() => setProfile({ ...profile, emojiUsage: level })}
-                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.emojiUsage === level
-                        ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
-                        : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
-                        }`}
-                    >
-                      {level === 'none' ? '😐 NONE' : level === 'minimal' ? '🙂 MIN' : level === 'moderate' ? '😊 MOD' : '🤩 HEAVY'}
-                    </button>
-                  ))}
                 </div>
               </div>
-            </div>
 
-            {/* Capitalization */}
-            <div className="bg-zinc-900 border border-zinc-800 p-6 relative">
-              <CornerNodes className="opacity-30" />
-              <div>
-                <label className="label-sm text-zinc-400 mb-3 block">CAPITALIZATION</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['lowercase', 'mixed', 'normal'] as const).map((level) => (
-                    <button
-                      key={level}
-                      onClick={() => setProfile({ ...profile, capitalization: level })}
-                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.capitalization === level
-                        ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
-                        : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
-                        }`}
-                    >
-                      {level}
-                    </button>
-                  ))}
+              {/* Capitalization */}
+              <div className="bg-zinc-900 border border-zinc-800 p-6 relative">
+                <CornerNodes className="opacity-30" />
+                <div>
+                  <label className="label-sm text-zinc-400 mb-3 block">CAPITALIZATION</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['lowercase', 'mixed', 'normal'] as const).map((level) => (
+                      <button
+                        key={level}
+                        onClick={() => setProfile({ ...profile, capitalization: level })}
+                        className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.capitalization === level
+                          ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
+                          : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
+                          }`}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Punctuation */}
-            <div className="bg-zinc-900 border border-zinc-800 p-6 relative">
-              <CornerNodes className="opacity-30" />
-              <div>
-                <label className="label-sm text-zinc-400 mb-3 block">PUNCTUATION</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['none', 'minimal', 'full'] as const).map((level) => (
-                    <button
-                      key={level}
-                      onClick={() => setProfile({ ...profile, punctuation: level })}
-                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.punctuation === level
-                        ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
-                        : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
-                        }`}
-                    >
-                      {level}
-                    </button>
-                  ))}
+              {/* Punctuation */}
+              <div className="bg-zinc-900 border border-zinc-800 p-6 relative">
+                <CornerNodes className="opacity-30" />
+                <div>
+                  <label className="label-sm text-zinc-400 mb-3 block">PUNCTUATION</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['none', 'minimal', 'full'] as const).map((level) => (
+                      <button
+                        key={level}
+                        onClick={() => setProfile({ ...profile, punctuation: level })}
+                        className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.punctuation === level
+                          ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
+                          : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
+                          }`}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Message Length */}
-            <div className="bg-zinc-900 border border-zinc-800 p-6 relative">
-              <CornerNodes className="opacity-30" />
-              <div>
-                <label className="label-sm text-zinc-400 mb-3 block">MESSAGE LENGTH</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['short', 'medium', 'long'] as const).map((level) => (
-                    <button
-                      key={level}
-                      onClick={() => setProfile({ ...profile, averageLength: level })}
-                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.averageLength === level
-                        ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
-                        : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
-                        }`}
-                    >
-                      {level}
-                    </button>
-                  ))}
+              {/* Message Length */}
+              <div className="bg-zinc-900 border border-zinc-800 p-6 relative">
+                <CornerNodes className="opacity-30" />
+                <div>
+                  <label className="label-sm text-zinc-400 mb-3 block">MESSAGE LENGTH</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['short', 'medium', 'long'] as const).map((level) => (
+                      <button
+                        key={level}
+                        onClick={() => setProfile({ ...profile, averageLength: level })}
+                        className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.averageLength === level
+                          ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
+                          : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
+                          }`}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Slang Level */}
-            <div className="bg-zinc-900 border border-zinc-800 p-6 relative">
-              <CornerNodes className="opacity-30" />
-              <div>
-                <label className="label-sm text-zinc-400 mb-3 block">SLANG LEVEL</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['formal', 'casual', 'heavy-slang'] as const).map((level) => (
-                    <button
-                      key={level}
-                      onClick={() => setProfile({ ...profile, slangLevel: level })}
-                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.slangLevel === level
-                        ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
-                        : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
-                        }`}
-                    >
-                      {level === 'heavy-slang' ? 'HEAVY' : level}
-                    </button>
-                  ))}
+              {/* Slang Level */}
+              <div className="bg-zinc-900 border border-zinc-800 p-6 relative">
+                <CornerNodes className="opacity-30" />
+                <div>
+                  <label className="label-sm text-zinc-400 mb-3 block">SLANG LEVEL</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['formal', 'casual', 'heavy-slang'] as const).map((level) => (
+                      <button
+                        key={level}
+                        onClick={() => setProfile({ ...profile, slangLevel: level })}
+                        className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.slangLevel === level
+                          ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
+                          : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
+                          }`}
+                      >
+                        {level === 'heavy-slang' ? 'HEAVY' : level}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Preferred Tone */}
-            <div className="bg-zinc-900 border border-zinc-800 p-6 relative">
-              <CornerNodes className="opacity-30" />
-              <div>
-                <label className="label-sm text-zinc-400 mb-3 block">PREFERRED TONE</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {(['playful', 'chill', 'direct', 'sweet'] as const).map((tone) => (
-                    <button
-                      key={tone}
-                      onClick={() => setProfile({ ...profile, preferredTone: tone })}
-                      className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.preferredTone === tone
-                        ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
-                        : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
-                        }`}
-                    >
-                      {tone}
-                    </button>
-                  ))}
+              {/* Preferred Tone */}
+              <div className="bg-zinc-900 border border-zinc-800 p-6 relative">
+                <CornerNodes className="opacity-30" />
+                <div>
+                  <label className="label-sm text-zinc-400 mb-3 block">PREFERRED TONE</label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {(['playful', 'chill', 'direct', 'sweet'] as const).map((tone) => (
+                      <button
+                        key={tone}
+                        onClick={() => setProfile({ ...profile, preferredTone: tone })}
+                        className={`py-2 px-3 border text-[10px] font-mono uppercase tracking-wider transition-all ${profile.preferredTone === tone
+                          ? 'bg-white text-black border-white font-bold shadow-[0_0_10px_rgba(255,255,255,0.3)]'
+                          : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
+                          }`}
+                      >
+                        {tone}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
             </div>
           </div>
 
