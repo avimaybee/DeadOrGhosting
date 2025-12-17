@@ -19,6 +19,42 @@ const safetySettings = [
   { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
 ];
 
+// Retry helper with exponential backoff for handling 503 errors
+const MAX_RETRIES = 3;
+const INITIAL_DELAY_MS = 1000;
+
+async function retryWithBackoff<T>(
+  operation: () => Promise<T>,
+  operationName: string
+): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      lastError = error;
+
+      // Check if it's a 503/UNAVAILABLE error
+      const errorMessage = error?.message || error?.toString() || '';
+      const is503Error =
+        errorMessage.includes('503') ||
+        errorMessage.includes('UNAVAILABLE') ||
+        errorMessage.includes('overloaded');
+
+      if (!is503Error || attempt === MAX_RETRIES - 1) {
+        throw error;
+      }
+
+      const delay = INITIAL_DELAY_MS * Math.pow(2, attempt);
+      console.log(`${operationName}: Retry ${attempt + 1}/${MAX_RETRIES} after ${delay}ms (503 error)`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError;
+}
+
 export const generatePersona = async (
   description: string,
   screenshotsBase64: string[],
@@ -79,11 +115,14 @@ export const generatePersona = async (
   });
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: { parts: parts },
-      config: { safetySettings: safetySettings }
-    });
+    const response = await retryWithBackoff(
+      () => ai.models.generateContent({
+        model: "gemini-flash-latest",
+        contents: { parts: parts },
+        config: { safetySettings: safetySettings }
+      }),
+      'generatePersona'
+    );
 
     let text = response.text;
     if (!text) throw new Error("No data");
@@ -258,11 +297,14 @@ export const simulateDraft = async (
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: { safetySettings: safetySettings }
-    });
+    const response = await retryWithBackoff(
+      () => ai.models.generateContent({
+        model: "gemini-flash-latest",
+        contents: prompt,
+        config: { safetySettings: safetySettings }
+      }),
+      'simulateDraft'
+    );
 
     let text = response.text;
     if (!text) throw new Error("Connection Lost");
@@ -387,11 +429,14 @@ export const analyzeSimulation = async (
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: { safetySettings: safetySettings }
-    });
+    const response = await retryWithBackoff(
+      () => ai.models.generateContent({
+        model: "gemini-flash-latest",
+        contents: prompt,
+        config: { safetySettings: safetySettings }
+      }),
+      'analyzeSimulation'
+    );
 
     let text = response.text;
     if (!text) throw new Error("Connection Lost");
@@ -671,11 +716,14 @@ export const getQuickAdvice = async (
   }
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: parts,
-      config: { safetySettings: safetySettings }
-    });
+    const response = await retryWithBackoff(
+      () => ai.models.generateContent({
+        model: "gemini-flash-latest",
+        contents: parts,
+        config: { safetySettings: safetySettings }
+      }),
+      'getQuickAdvice'
+    );
 
     let text = response.text;
     if (!text) throw new Error("Connection Lost");
@@ -813,14 +861,17 @@ IMPORTANT:
 
   try {
     const model = ai.models;
-    const response = await model.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [{ role: "user", parts }],
-      config: {
-        safetySettings,
-        temperature: 0.3, // Lower temp for more consistent analysis
-      },
-    });
+    const response = await retryWithBackoff(
+      () => model.generateContent({
+        model: "gemini-flash-latest",
+        contents: [{ role: "user", parts }],
+        config: {
+          safetySettings,
+          temperature: 0.3, // Lower temp for more consistent analysis
+        },
+      }),
+      'extractUserStyle'
+    );
 
     let text = response.text?.trim() || '';
 

@@ -340,7 +340,7 @@ const StandbyScreen = ({ onActivate, hasProfile, authUser }: {
   hasProfile: boolean,
   authUser?: AuthUser | null
 }) => (
-  <div className="h-full w-full flex flex-col relative overflow-hidden bg-matte-base">
+  <div className="h-full w-full flex flex-col relative overflow-hidden bg-matte-base pb-16 md:pb-0">
 
     {/* Background Decor */}
     <div className="absolute top-0 right-0 w-[50%] h-full border-l border-zinc-900/50 hidden md:block"></div>
@@ -349,7 +349,7 @@ const StandbyScreen = ({ onActivate, hasProfile, authUser }: {
 
 
     {/* CONTENT GRID */}
-    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 md:h-full">
+    <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 md:h-full overflow-y-auto md:overflow-hidden">
 
       {/* LEFT: HERO */}
       <div className="p-6 md:p-12 lg:p-16 flex flex-col justify-center relative z-10 border-b md:border-b-0 md:border-r border-zinc-800 overflow-hidden">
@@ -367,8 +367,8 @@ const StandbyScreen = ({ onActivate, hasProfile, authUser }: {
           )}
           <span className="label-sm text-hard-gold mb-2 block">YOUR AI WINGMAN</span>
           <h1 className="leading-[0.85] font-impact text-white mb-4">
-            <span className="text-[2rem] md:text-[3rem] lg:text-[4rem] block text-zinc-500">THE</span>
-            <span className="text-[4rem] md:text-[6rem] lg:text-[8rem] block">RIZZBOT</span>
+            <span className="text-[1.5rem] sm:text-[2rem] md:text-[3rem] lg:text-[4rem] block text-zinc-500">THE</span>
+            <span className="text-[2.5rem] sm:text-[4rem] md:text-[6rem] lg:text-[8rem] block">RIZZBOT</span>
           </h1>
           <p className="text-zinc-500 max-w-sm text-sm leading-relaxed font-editorial">
             AI-powered texting coach. Get instant advice, practice your responses, and never get ghosted again.

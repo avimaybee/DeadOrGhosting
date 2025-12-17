@@ -259,19 +259,19 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
         </div>
 
         {/* Content */}
-        <div className="flex-1 flex items-center justify-center p-6 relative z-10">
-          <div className="w-full h-full flex items-center justify-center">
+        <div className="flex-1 min-h-0 overflow-y-auto flex items-center justify-center p-4 sm:p-6 relative z-10">
+          <div className="w-full flex items-center justify-center">
             <div className="bg-zinc-900 border border-zinc-800 relative max-w-2xl w-full">
               <CornerNodes />
-              <div className="p-8 md:p-12">
-                <div className="text-center space-y-6">
-                  <div className="w-16 h-16 mx-auto bg-hard-gold/10 border border-hard-gold flex items-center justify-center">
-                    <Circle className="w-8 h-8" />
+              <div className="p-4 sm:p-8 md:p-12">
+                <div className="text-center space-y-4 sm:space-y-6">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-hard-gold/10 border border-hard-gold flex items-center justify-center">
+                    <Circle className="w-6 h-6 sm:w-8 sm:h-8" />
                   </div>
 
                   <div>
                     <div className="label-sm text-hard-gold mb-2">YOUR ENERGY</div>
-                    <h2 className="text-4xl font-impact text-white uppercase tracking-tight mb-3">TEACH ME YOUR VOICE</h2>
+                    <h2 className="text-2xl sm:text-4xl font-impact text-white uppercase tracking-tight mb-3">TEACH ME YOUR VOICE</h2>
                     <p className="text-zinc-400 text-sm leading-relaxed">
                       help me sound like you. drop some of your recent texts so i can match your energy.
                     </p>

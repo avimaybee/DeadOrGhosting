@@ -91,7 +91,14 @@ export interface SessionsResponse {
  */
 export async function getOrCreateUser(firebaseUid: string, userData?: UserData): Promise<User> {
   const res = await fetch(`/api/users?firebase_uid=${encodeURIComponent(firebaseUid)}`);
-  
+
+  // Check content type before parsing JSON
+  const contentType = res.headers.get('content-type');
+  if (!contentType?.includes('application/json')) {
+    console.error('getOrCreateUser: Expected JSON but got:', contentType);
+    throw new Error('API returned non-JSON response. Backend may not be deployed correctly.');
+  }
+
   if (res.ok) {
     const data = await res.json();
     // User exists, update their data if provided
@@ -101,7 +108,7 @@ export async function getOrCreateUser(firebaseUid: string, userData?: UserData):
     }
     return data.user;
   }
-  
+
   // User doesn't exist, create them
   return createUser(firebaseUid, userData);
 }
@@ -113,7 +120,7 @@ export async function createUser(firebaseUid: string, userData?: UserData): Prom
   const res = await fetch(`/api/users`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
+    body: JSON.stringify({
       firebase_uid: firebaseUid,
       anon_id: firebaseUid, // For backwards compat with existing schema
       ...userData,
@@ -251,9 +258,32 @@ export async function submitFeedback(feedback: FeedbackEntry): Promise<{ id: num
 export async function getSessions(firebaseUid?: string, limit = 20, offset = 0): Promise<SessionsResponse> {
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
   if (firebaseUid) params.set('anon_id', firebaseUid);
-  
+
   const res = await fetch(`/api/sessions?${params}`);
-  if (!res.ok) throw new Error(`Failed to get sessions: ${res.statusText}`);
+
+  // Handle 404 (no sessions found - this is normal for new users)
+  if (res.status === 404) {
+    return {
+      sessions: [],
+      pagination: { total: 0, limit, offset, hasMore: false }
+    };
+  }
+
+  // Check content type before parsing JSON
+  const contentType = res.headers.get('content-type');
+  if (!contentType?.includes('application/json')) {
+    console.error('getSessions: Expected JSON but got:', contentType);
+    // Return empty sessions instead of crashing - likely API not deployed or route issue
+    return {
+      sessions: [],
+      pagination: { total: 0, limit, offset, hasMore: false }
+    };
+  }
+
+  if (!res.ok) {
+    throw new Error(`Failed to get sessions: ${res.statusText}`);
+  }
+
   return res.json();
 }
 
