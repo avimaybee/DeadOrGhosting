@@ -1,6 +1,21 @@
 // Database Service Layer – client-side helpers for fetching/posting to D1 APIs
 
 const API_BASE = typeof window === 'undefined' ? '' : '';
+const isDevelopment = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+
+// Reduce console spam in development when DB is unavailable
+const logDbError = (message: string, ...args: any[]) => {
+  if (isDevelopment) {
+    // Only log once per session using a flag
+    const logKey = `db_error_${message.slice(0, 30)}`;
+    if (!(window as any)[logKey]) {
+      console.warn(`[DB] ${message} (local dev - DB features disabled)`, ...args);
+      (window as any)[logKey] = true;
+    }
+  } else {
+    console.error(`[DB] ${message}`, ...args);
+  }
+};
 
 export interface User {
   id: number;
@@ -95,7 +110,7 @@ export async function getOrCreateUser(firebaseUid: string, userData?: UserData):
   // Check content type before parsing JSON
   const contentType = res.headers.get('content-type');
   if (!contentType?.includes('application/json')) {
-    console.error('getOrCreateUser: Expected JSON but got:', contentType);
+    logDbError('getOrCreateUser: Expected JSON but got: ' + contentType);
     throw new Error('API returned non-JSON response. Backend may not be deployed correctly.');
   }
 
@@ -272,7 +287,7 @@ export async function getSessions(firebaseUid?: string, limit = 20, offset = 0):
   // Check content type before parsing JSON
   const contentType = res.headers.get('content-type');
   if (!contentType?.includes('application/json')) {
-    console.error('getSessions: Expected JSON but got:', contentType);
+    logDbError('getSessions: Expected JSON but got: ' + contentType);
     // Return empty sessions instead of crashing - likely API not deployed or route issue
     return {
       sessions: [],

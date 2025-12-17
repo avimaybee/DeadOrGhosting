@@ -27,13 +27,13 @@ async function retryWithBackoff<T>(
   operation: () => Promise<T>,
   operationName: string
 ): Promise<T> {
-  let lastError: Error | null = null;
+  let lastError: Error = new Error(`${operationName}: Max retries (${MAX_RETRIES}) exceeded`);
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
       return await operation();
     } catch (error: any) {
-      lastError = error;
+      lastError = error instanceof Error ? error : new Error(String(error));
 
       // Check if it's a 503/UNAVAILABLE error
       const errorMessage = error?.message || error?.toString() || '';
@@ -42,8 +42,9 @@ async function retryWithBackoff<T>(
         errorMessage.includes('UNAVAILABLE') ||
         errorMessage.includes('overloaded');
 
+      // On final attempt or non-retryable error, throw immediately
       if (!is503Error || attempt === MAX_RETRIES - 1) {
-        throw error;
+        throw lastError;
       }
 
       const delay = INITIAL_DELAY_MS * Math.pow(2, attempt);
@@ -52,6 +53,7 @@ async function retryWithBackoff<T>(
     }
   }
 
+  // This should never be reached, but ensures we always throw a meaningful error
   throw lastError;
 }
 

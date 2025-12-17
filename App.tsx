@@ -246,11 +246,11 @@ const SideDock = ({ activeModule, setModule, authUser, onSignOut }: {
   );
 };
 
-// --- COMPONENT: BOTTOM TABS (Mobile) ---
+// --- COMPONENT: BOTTOM TABS (Mobile) - Compact & Touch-Friendly ---
 const BottomTabs = ({ activeModule, setModule }: { activeModule: Module, setModule: (m: Module) => void }) => {
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-zinc-900 border-t border-zinc-800 safe-area-inset-bottom">
-      <div className="flex justify-around items-center h-16 px-2">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-zinc-900/95 backdrop-blur-sm border-t border-zinc-800/80 safe-area-inset-bottom">
+      <div className="flex justify-around items-center h-14 px-1">
         <MobileTabItemSvg
           active={activeModule === 'standby'}
           onClick={() => setModule('standby')}
@@ -266,19 +266,19 @@ const BottomTabs = ({ activeModule, setModule }: { activeModule: Module, setModu
         <MobileTabItemSvg
           active={activeModule === 'simulator'}
           onClick={() => setModule('simulator')}
-          label="PRACTICE"
+          label="SIM"
           Icon={MessageSquare}
         />
         <MobileTabItemSvg
           active={activeModule === 'history'}
           onClick={() => setModule('history')}
-          label="HISTORY"
+          label="LOG"
           Icon={Clock}
         />
         <MobileTabItemSvg
           active={activeModule === 'profile'}
           onClick={() => setModule('profile')}
-          label="PROFILE"
+          label="YOU"
           Icon={User}
         />
       </div>
@@ -294,13 +294,13 @@ const MobileTabItemSvg = ({ active, onClick, label, Icon }: {
 }) => (
   <button
     onClick={onClick}
-    className={`flex flex-col items-center justify-center gap-1 min-w-[60px] py-2 px-3 rounded-lg transition-all ${active
-      ? 'text-white bg-zinc-800'
-      : 'text-zinc-500 hover:text-zinc-300'
+    className={`flex flex-col items-center justify-center gap-0.5 min-w-[50px] py-1.5 px-1.5 rounded-md transition-all ${active
+      ? 'text-white bg-zinc-800/80'
+      : 'text-zinc-500 active:text-zinc-300'
       }`}
   >
-    <Icon className="w-5 h-5" />
-    <span className={`text-[9px] font-bold tracking-wider ${active ? '' : 'opacity-70'}`}>
+    <Icon className={`${active ? 'w-5 h-5' : 'w-4 h-4'}`} />
+    <span className={`text-[8px] font-bold tracking-wide uppercase ${active ? '' : 'opacity-60'}`}>
       {label}
     </span>
   </button>
@@ -334,7 +334,7 @@ const DockItem = ({ active, onClick, label, index }: { active: boolean, onClick:
   </button>
 );
 
-// --- COMPONENT: STANDBY SCREEN (EDITORIAL) ---
+// --- COMPONENT: STANDBY SCREEN (EDITORIAL) - Mobile-Optimized ---
 const StandbyScreen = ({ onActivate, hasProfile, authUser }: {
   onActivate: (m: Module) => void,
   hasProfile: boolean,
@@ -346,47 +346,45 @@ const StandbyScreen = ({ onActivate, hasProfile, authUser }: {
     <div className="absolute top-0 right-0 w-[50%] h-full border-l border-zinc-900/50 hidden md:block"></div>
     <AbstractGrid className="absolute bottom-[-10%] left-[-10%] w-[40vw] h-[40vw] text-zinc-800 opacity-20 pointer-events-none animate-spin-slow" />
 
-
-
     {/* CONTENT GRID */}
     <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 md:h-full overflow-y-auto md:overflow-hidden">
 
-      {/* LEFT: HERO */}
-      <div className="p-6 md:p-12 lg:p-16 flex flex-col justify-center relative z-10 border-b md:border-b-0 md:border-r border-zinc-800 overflow-hidden">
+      {/* LEFT: HERO - Compact on mobile */}
+      <div className="p-4 sm:p-6 md:p-10 lg:p-14 flex flex-col justify-center relative z-10 border-b md:border-b-0 md:border-r border-zinc-800 overflow-hidden">
         <div>
-          {/* Welcome User */}
+          {/* Welcome User - More compact */}
           {authUser && (
-            <div className="mb-4 flex items-center gap-2">
+            <div className="mb-3 flex items-center gap-2">
               {authUser.photoURL && (
-                <img src={authUser.photoURL} alt="" className="w-6 h-6 rounded-full" />
+                <img src={authUser.photoURL} alt="" className="w-5 h-5 rounded-full" />
               )}
-              <span className="text-sm text-zinc-400">
-                welcome back, <span className="text-white">{authUser.displayName || authUser.email?.split('@')[0] || 'friend'}</span>
+              <span className="text-xs text-zinc-400">
+                hey, <span className="text-white font-medium">{authUser.displayName || authUser.email?.split('@')[0] || 'friend'}</span>
               </span>
             </div>
           )}
-          <span className="label-sm text-hard-gold mb-2 block">YOUR AI WINGMAN</span>
-          <h1 className="leading-[0.85] font-impact text-white mb-4">
-            <span className="text-[1.5rem] sm:text-[2rem] md:text-[3rem] lg:text-[4rem] block text-zinc-500">THE</span>
-            <span className="text-[2.5rem] sm:text-[4rem] md:text-[6rem] lg:text-[8rem] block">RIZZBOT</span>
+          <span className="label-sm text-hard-gold mb-1.5 block">YOUR AI WINGMAN</span>
+          <h1 className="leading-[0.85] font-impact text-white mb-3">
+            <span className="text-[1.25rem] sm:text-[1.5rem] md:text-[2.5rem] lg:text-[3.5rem] block text-zinc-500">THE</span>
+            <span className="text-[2rem] sm:text-[3rem] md:text-[5rem] lg:text-[7rem] block">RIZZBOT</span>
           </h1>
-          <p className="text-zinc-500 max-w-sm text-sm leading-relaxed font-editorial">
-            AI-powered texting coach. Get instant advice, practice your responses, and never get ghosted again.
+          <p className="text-zinc-500 max-w-xs text-xs sm:text-sm leading-relaxed font-editorial">
+            AI-powered texting coach. Get advice, practice responses, never get ghosted.
           </p>
         </div>
 
-        {/* Profile Setup CTA (if no profile) */}
+        {/* Profile Setup CTA (if no profile) - Compact */}
         {!hasProfile && (
-          <div className="mt-6 bg-zinc-900/50 border border-zinc-800 p-3 relative">
+          <div className="mt-4 sm:mt-5 bg-zinc-900/50 border border-zinc-800 p-2.5 sm:p-3 relative">
             <CornerNodes className="opacity-20" />
-            <div className="flex items-start gap-3">
-              <span className="text-xl">○</span>
+            <div className="flex items-start gap-2.5">
+              <span className="text-base sm:text-lg">○</span>
               <div className="flex-1">
-                <div className="label-sm text-zinc-400 mb-1">RECOMMENDED</div>
-                <p className="text-xs text-zinc-300 mb-2">set up your style profile for personalized suggestions</p>
+                <div className="label-sm text-zinc-400 mb-0.5">RECOMMENDED</div>
+                <p className="text-[11px] sm:text-xs text-zinc-300 mb-1.5">set up your style profile for personalized suggestions</p>
                 <button
                   onClick={() => onActivate('profile')}
-                  className="px-3 py-1.5 bg-white text-black text-[9px] font-mono uppercase tracking-wider hover:bg-zinc-200 transition-colors"
+                  className="px-2.5 py-1 bg-white text-black text-[8px] sm:text-[9px] font-mono uppercase tracking-wider hover:bg-zinc-200 transition-colors"
                 >
                   TEACH YOUR VOICE
                 </button>
@@ -396,37 +394,37 @@ const StandbyScreen = ({ onActivate, hasProfile, authUser }: {
         )}
       </div>
 
-      {/* RIGHT: MODULE SELECTOR */}
+      {/* RIGHT: MODULE SELECTOR - Compact buttons on mobile */}
       <div className="flex flex-col overflow-hidden">
         {/* QUICK MODE - Primary CTA */}
         <button
           onClick={() => onActivate('quick')}
-          className="flex-1 border-b border-zinc-800 p-6 md:p-10 text-left hover:bg-emerald-900/20 transition-all group relative overflow-hidden flex flex-col justify-center"
+          className="flex-1 border-b border-zinc-800 p-3 sm:p-5 md:p-8 text-left hover:bg-emerald-900/20 active:bg-emerald-900/30 transition-all group relative overflow-hidden flex flex-col justify-center min-h-[100px] sm:min-h-[120px]"
         >
-          <div className="absolute right-6 top-6 opacity-0 group-hover:opacity-100 transition-all duration-500">
-            <ArrowRight className="w-10 h-10 text-emerald-400 -rotate-45" />
+          <div className="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-all duration-500 hidden sm:block">
+            <ArrowRight className="w-8 h-8 text-emerald-400 -rotate-45" />
           </div>
-          <div className="label-sm text-zinc-500 group-hover:text-emerald-400 transition-colors mb-2">FAST LANE</div>
-          <h2 className="text-4xl md:text-5xl font-impact text-zinc-300 group-hover:text-white transition-colors uppercase">
+          <div className="label-sm text-zinc-500 group-hover:text-emerald-400 transition-colors mb-1">FAST LANE</div>
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-impact text-zinc-300 group-hover:text-white transition-colors uppercase">
             Quick Mode
           </h2>
-          <div className="mt-3 opacity-50 group-hover:opacity-100 transition-opacity max-w-md text-xs font-mono text-zinc-400">
-                    // PASTE THEIR MESSAGE → GET INSTANT ADVICE
+          <div className="mt-1.5 sm:mt-2 opacity-60 group-hover:opacity-100 transition-opacity max-w-md text-[9px] sm:text-[11px] font-mono text-zinc-400">
+            // PASTE MESSAGE → GET ADVICE
           </div>
         </button>
         <button
           onClick={() => onActivate('simulator')}
-          className="flex-1 p-6 md:p-10 text-left hover:bg-zinc-900/50 transition-all group relative overflow-hidden flex flex-col justify-center"
+          className="flex-1 p-3 sm:p-5 md:p-8 text-left hover:bg-zinc-900/50 active:bg-zinc-800/50 transition-all group relative overflow-hidden flex flex-col justify-center min-h-[100px] sm:min-h-[120px]"
         >
-          <div className="absolute right-6 top-6 opacity-0 group-hover:opacity-100 transition-all duration-500">
-            <ArrowRight className="w-10 h-10 text-hard-blue -rotate-45" />
+          <div className="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-all duration-500 hidden sm:block">
+            <ArrowRight className="w-8 h-8 text-hard-blue -rotate-45" />
           </div>
-          <div className="label-sm text-zinc-500 group-hover:text-hard-blue transition-colors mb-2">MODULE 02</div>
-          <h2 className="text-4xl md:text-5xl font-impact text-zinc-300 group-hover:text-white transition-colors uppercase">
+          <div className="label-sm text-zinc-500 group-hover:text-hard-blue transition-colors mb-1">MODULE 02</div>
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-impact text-zinc-300 group-hover:text-white transition-colors uppercase">
             Practice Mode
           </h2>
-          <div className="mt-3 opacity-50 group-hover:opacity-100 transition-opacity max-w-md text-xs font-mono text-zinc-400">
-                    // REHEARSE YOUR TEXTS. SEND WITH CONFIDENCE.
+          <div className="mt-1.5 sm:mt-2 opacity-60 group-hover:opacity-100 transition-opacity max-w-md text-[9px] sm:text-[11px] font-mono text-zinc-400">
+            // REHEARSE TEXTS, SEND WITH CONFIDENCE
           </div>
         </button>
       </div>
@@ -649,8 +647,8 @@ function App() {
 
         <SideDock activeModule={activeModule} setModule={setActiveModule} authUser={authUser} onSignOut={handleSignOut} />
 
-        {/* MAIN CONTAINER */}
-        <div className="flex-1 relative h-full flex flex-col md:p-4 overflow-hidden pb-16 md:pb-4 scrollbar-hide">
+        {/* MAIN CONTAINER - Better mobile spacing */}
+        <div className="flex-1 relative h-full flex flex-col md:p-3 lg:p-4 overflow-hidden pb-0 md:pb-3 lg:pb-4 scrollbar-hide">
 
           {/* VIEWPORT FRAME */}
           <div className="relative w-full flex-1 min-h-0 md:border md:border-zinc-800 bg-black/20 overflow-hidden flex flex-col md:shadow-2xl">
@@ -705,7 +703,7 @@ function App() {
             {/* HISTORY MODULE */}
             {activeModule === 'history' && (
               <div className="h-full w-full flex flex-col animate-fade-in bg-matte-base">
-                <History firebaseUid={authUser?.uid} />
+                <History firebaseUid={authUser?.uid} onBack={() => setActiveModule('standby')} />
               </div>
             )}
           </div>

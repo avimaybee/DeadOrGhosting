@@ -51,7 +51,7 @@ See [Deployment Guide](./docs/05_DEPLOYMENT.md) for details.
 
 - **Frontend:** React 19 + TypeScript + Vite
 - **Styling:** Tailwind CSS
-- **AI:** Google Gemini API (gemini-2.5-flash)
+- **AI:** Google Gemini API (gemini-flash-latest)
 - **Auth:** Firebase Authentication
 - **Database:** Cloudflare D1 (SQLite)
 - **Hosting:** Cloudflare Pages

@@ -233,22 +233,22 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
   // Intro Screen
   if (currentStep === 'intro') {
     return (
-      <div className="h-full w-full flex flex-col bg-matte-base relative overflow-hidden scrollbar-hide pb-20 md:pb-0">
+      <div className="h-full w-full flex flex-col bg-matte-base relative overflow-hidden scrollbar-hide pb-16 md:pb-0">
         <div className="absolute inset-0 bg-topo-pattern opacity-5 pointer-events-none"></div>
 
-        {/* Header */}
-        <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between relative z-10">
+        {/* Header - More compact */}
+        <div className="border-b border-zinc-800 px-4 sm:px-6 py-3 flex items-center justify-between relative z-10">
           <button
             onClick={onBack}
-            className="flex items-center gap-3 text-zinc-500 hover:text-white transition-colors group"
+            className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors group"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-[10px] font-mono uppercase tracking-widest group-hover:text-hard-gold transition-colors">BACK</span>
+            <span className="text-[9px] font-mono uppercase tracking-widest group-hover:text-hard-gold transition-colors">BACK</span>
           </button>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 bg-hard-gold animate-pulse"></div>
-              <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">YOUR_STYLE</span>
+              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">PROFILE</span>
             </div>
             {onSignOut && (
               <button onClick={onSignOut} className="text-zinc-500 hover:text-red-400 transition-colors">
@@ -259,42 +259,42 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-h-0 overflow-y-auto flex items-center justify-center p-4 sm:p-6 relative z-10">
+        <div className="flex-1 min-h-0 overflow-y-auto flex items-center justify-center p-3 sm:p-5 relative z-10">
           <div className="w-full flex items-center justify-center">
             <div className="bg-zinc-900 border border-zinc-800 relative max-w-2xl w-full">
               <CornerNodes />
-              <div className="p-4 sm:p-8 md:p-12">
-                <div className="text-center space-y-4 sm:space-y-6">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-hard-gold/10 border border-hard-gold flex items-center justify-center">
-                    <Circle className="w-6 h-6 sm:w-8 sm:h-8" />
+              <div className="p-4 sm:p-6 md:p-8">
+                <div className="text-center space-y-3 sm:space-y-5">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-hard-gold/10 border border-hard-gold flex items-center justify-center">
+                    <Circle className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
 
                   <div>
-                    <div className="label-sm text-hard-gold mb-2">YOUR ENERGY</div>
-                    <h2 className="text-2xl sm:text-4xl font-impact text-white uppercase tracking-tight mb-3">TEACH ME YOUR VOICE</h2>
-                    <p className="text-zinc-400 text-sm leading-relaxed">
-                      help me sound like you. drop some of your recent texts so i can match your energy.
+                    <div className="label-sm text-hard-gold mb-1">YOUR ENERGY</div>
+                    <h2 className="text-xl sm:text-3xl font-impact text-white uppercase tracking-tight mb-2">TEACH ME YOUR VOICE</h2>
+                    <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+                      help me sound like you. drop some of your recent texts.
                     </p>
                   </div>
 
-                  <div className="space-y-3 text-left text-sm text-zinc-500">
-                    <div className="flex items-start gap-3">
-                      <div className="w-1.5 h-1.5 bg-hard-gold mt-2"></div>
-                      <p>i'll learn your emoji game, punctuation chaos, and slang</p>
+                  <div className="space-y-2 text-left text-xs text-zinc-500">
+                    <div className="flex items-start gap-2">
+                      <div className="w-1 h-1 bg-hard-gold mt-1.5"></div>
+                      <p>i'll learn your emoji game & slang</p>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-1.5 h-1.5 bg-hard-gold mt-2"></div>
-                      <p>responses will hit different - same you, just elevated</p>
+                    <div className="flex items-start gap-2">
+                      <div className="w-1 h-1 bg-hard-gold mt-1.5"></div>
+                      <p>responses will hit different - same you, elevated</p>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-1.5 h-1.5 bg-hard-gold mt-2"></div>
-                      <p>100% private - stays on your device, no cap</p>
+                    <div className="flex items-start gap-2">
+                      <div className="w-1 h-1 bg-hard-gold mt-1.5"></div>
+                      <p>100% private - stays on your device</p>
                     </div>
                   </div>
 
                   <button
                     onClick={() => setCurrentStep('samples')}
-                    className="w-full py-4 bg-white text-black font-impact text-xl uppercase tracking-wide hover:bg-zinc-200 transition-colors"
+                    className="w-full py-3 sm:py-3.5 bg-white text-black font-impact text-base sm:text-lg uppercase tracking-wide hover:bg-zinc-200 transition-colors"
                   >
                     GET STARTED
                   </button>
@@ -310,69 +310,67 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
   // Samples Collection Screen
   if (currentStep === 'samples') {
     return (
-      <div className="h-full w-full flex flex-col bg-matte-base relative overflow-y-auto scrollbar-hide pb-20 md:pb-0">
+      <div className="h-full w-full flex flex-col bg-matte-base relative overflow-y-auto scrollbar-hide pb-16 md:pb-0">
         <div className="absolute inset-0 bg-topo-pattern opacity-5 pointer-events-none"></div>
 
-        {/* Header */}
-        <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between relative z-30 sticky top-0 bg-matte-base/95 backdrop-blur-sm">
+        {/* Header - More compact */}
+        <div className="border-b border-zinc-800 px-4 sm:px-6 py-3 flex items-center justify-between relative z-30 sticky top-0 bg-matte-base/95 backdrop-blur-sm">
           <button
             onClick={() => setCurrentStep('intro')}
-            className="flex items-center gap-3 text-zinc-500 hover:text-white transition-colors group"
+            className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors group"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-[10px] font-mono uppercase tracking-widest group-hover:text-hard-gold transition-colors">BACK</span>
+            <span className="text-[9px] font-mono uppercase tracking-widest group-hover:text-hard-gold transition-colors">BACK</span>
           </button>
-          <div className="flex items-center gap-4">
-            <div className="label-sm text-zinc-500">STEP 1 OF 2</div>
-            {/* NEXT only appears if profile already exists (returning user editing samples) */}
+          <div className="flex items-center gap-3">
+            <div className="label-sm text-zinc-500">1/2</div>
             {initialProfile && (
               <button
                 onClick={() => setCurrentStep('review')}
-                className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors group"
+                className="flex items-center gap-1.5 text-zinc-500 hover:text-white transition-colors group"
               >
-                <span className="text-[10px] font-mono uppercase tracking-widest group-hover:text-hard-gold transition-colors">SKIP TO REVIEW</span>
-                <ArrowRight className="w-4 h-4" />
+                <span className="text-[9px] font-mono uppercase tracking-widest group-hover:text-hard-gold transition-colors">SKIP</span>
+                <ArrowRight className="w-3 h-3" />
               </button>
             )}
             {onSignOut && (
-              <button onClick={onSignOut} className="text-zinc-500 hover:text-red-400 transition-colors ml-2">
+              <button onClick={onSignOut} className="text-zinc-500 hover:text-red-400 transition-colors ml-1">
                 <LogOut className="w-4 h-4" />
               </button>
             )}
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 p-6 md:p-10 relative z-10">
-          <div className="max-w-6xl mx-auto space-y-12">
+        {/* Content - More compact */}
+        <div className="flex-1 p-3 sm:p-5 md:p-8 relative z-10">
+          <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
 
-            {/* Intro */}
-            <div className="text-center mb-8">
-              <div className="label-sm text-hard-gold mb-2">STYLE QUIZ</div>
-              <h2 className="text-3xl md:text-4xl font-impact text-white uppercase tracking-tight">PROVE YOU'RE NOT AN NPC</h2>
-              <p className="text-zinc-500 text-sm mt-2">answer these prompts in your natural texting voice.</p>
+            {/* Intro - Compact */}
+            <div className="text-center mb-4 sm:mb-6">
+              <div className="label-sm text-hard-gold mb-1">STYLE QUIZ</div>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-impact text-white uppercase tracking-tight">PROVE YOU'RE NOT AN NPC</h2>
+              <p className="text-zinc-500 text-xs sm:text-sm mt-1">answer these prompts in your natural texting voice.</p>
             </div>
 
-            {/* Quiz Questions */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+            {/* Quiz Questions - More compact */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {[
-                { scenario: "THE MATCH (FIRST IMPRESSION)", text: "so... what's your story? give me the lore." },
-                { scenario: "THE HOT TAKE (BANTER CHECK)", text: "unpopular opinion: pineapple belongs on pizza. judge me." },
-                { scenario: "THE VENT (EMPATHY CHECK)", text: "honestly having the worst day rn. my boss is actually insane." },
-                { scenario: "THE VIBE CHECK (VALIDATION)", text: "lol that's actually hilarious 💀 i'm dead." },
-                { scenario: "THE PLAN (MAKING MOVES)", text: "so... wyd this weekend? any big plans?" },
-                { scenario: "THE CLIFFHANGER (CURIOSITY)", text: "wait i have a random question for u" }
+                { scenario: "THE MATCH", text: "so... what's your story? give me the lore." },
+                { scenario: "THE HOT TAKE", text: "unpopular opinion: pineapple belongs on pizza." },
+                { scenario: "THE VENT", text: "honestly having the worst day rn." },
+                { scenario: "THE VIBE CHECK", text: "lol that's actually hilarious 💀" },
+                { scenario: "THE PLAN", text: "so... wyd this weekend?" },
+                { scenario: "THE CLIFFHANGER", text: "wait i have a random question for u" }
               ].map((item, index) => (
-                <div key={index} className="space-y-3 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${index * 100}ms` }}>
-                  <div className="space-y-1.5">
-                    <div className="ml-11 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">{item.scenario}</div>
-                    <div className="flex items-end gap-3">
-                      <div className="w-8 h-8 bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-500 shrink-0">
-                        <User className="w-4 h-4" />
+                <div key={index} className="space-y-2">
+                  <div className="space-y-1">
+                    <div className="ml-9 text-[9px] font-mono text-zinc-500 uppercase tracking-wider">{item.scenario}</div>
+                    <div className="flex items-end gap-2">
+                      <div className="w-7 h-7 bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-500 shrink-0">
+                        <User className="w-3.5 h-3.5" />
                       </div>
-                      <div className="bg-zinc-800 text-zinc-300 p-4 rounded-2xl rounded-bl-none max-w-[85%] text-sm border border-zinc-700 relative">
+                      <div className="bg-zinc-800 text-zinc-300 p-3 rounded-xl rounded-bl-none max-w-[85%] text-xs border border-zinc-700">
                         {item.text}
-                        <div className="absolute bottom-0 left-[-6px] w-0 h-0 border-l-[6px] border-l-transparent border-b-[6px] border-b-zinc-700"></div>
                       </div>
                     </div>
                   </div>
@@ -381,7 +379,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
                       <textarea
                         value={sampleTexts[index]}
                         onChange={(e) => handleSampleChange(index, e.target.value)}
-                        className="w-full bg-black border border-zinc-700 p-4 text-white text-sm rounded-2xl rounded-br-none focus:border-white focus:outline-none min-h-[80px] resize-none placeholder:text-zinc-700"
+                        className="w-full bg-black border border-zinc-700 p-3 text-white text-xs rounded-xl rounded-br-none focus:border-white focus:outline-none min-h-[60px] resize-none placeholder:text-zinc-700"
                         placeholder="Type your response..."
                       />
                     </div>
@@ -458,21 +456,21 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
               )}
             </div>
 
-            {/* Action Button */}
+            {/* Action Button - More compact */}
             <button
               onClick={analyzeWithAI}
               disabled={!canAnalyze || isAnalyzing}
-              className={`w-full py-5 font-impact text-2xl uppercase tracking-wide border transition-all flex items-center justify-center gap-3 ${!canAnalyze || isAnalyzing
+              className={`w-full py-3.5 sm:py-4 font-impact text-lg sm:text-xl uppercase tracking-wide border transition-all flex items-center justify-center gap-2 ${!canAnalyze || isAnalyzing
                 ? 'bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed'
                 : 'bg-white text-black border-white hover:bg-zinc-200'
                 }`}
             >
               {isAnalyzing ? (
-                <span className="flex items-center justify-center gap-3">
-                  <span className="animate-spin">◦</span> AI ANALYZING...
+                <span className="flex items-center justify-center gap-2">
+                  <span className="animate-spin">◦</span> ANALYZING...
                 </span>
               ) : (
-                <><Sparkles className="w-5 h-5" /> ANALYZE WITH AI</>
+                <><Sparkles className="w-4 h-4" /> ANALYZE WITH AI</>
               )}
             </button>
 
@@ -494,20 +492,20 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
 
   // Review & Edit Screen
   return (
-    <div className="h-full w-full flex flex-col bg-matte-base relative overflow-y-auto scrollbar-hide pb-20 md:pb-0">
+    <div className="h-full w-full flex flex-col bg-matte-base relative overflow-y-auto scrollbar-hide pb-16 md:pb-0">
       <div className="absolute inset-0 bg-topo-pattern opacity-5 pointer-events-none"></div>
 
-      {/* Header */}
-      <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between relative z-30 sticky top-0 bg-matte-base/95 backdrop-blur-sm">
+      {/* Header - More compact */}
+      <div className="border-b border-zinc-800 px-4 sm:px-6 py-3 flex items-center justify-between relative z-30 sticky top-0 bg-matte-base/95 backdrop-blur-sm">
         <button
           onClick={() => setCurrentStep('samples')}
-          className="flex items-center gap-3 text-zinc-500 hover:text-white transition-colors group"
+          className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors group"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-[10px] font-mono uppercase tracking-widest group-hover:text-hard-gold transition-colors">EDIT SAMPLES</span>
+          <span className="text-[9px] font-mono uppercase tracking-widest group-hover:text-hard-gold transition-colors">EDIT</span>
         </button>
-        <div className="flex items-center gap-4">
-          <div className="label-sm text-zinc-500">STEP 2 OF 2</div>
+        <div className="flex items-center gap-3">
+          <div className="label-sm text-zinc-500">2/2</div>
           {onSignOut && (
             <button onClick={onSignOut} className="text-zinc-500 hover:text-red-400 transition-colors">
               <LogOut className="w-4 h-4" />
@@ -516,14 +514,14 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onBack, onSave, initia
         </div>
       </div>
 
-      {/* Content - 2 Column Layout */}
-      <div className="flex-1 p-6 md:p-8 relative z-0">
+      {/* Content - 2 Column Layout - More compact */}
+      <div className="flex-1 p-3 sm:p-5 md:p-6 relative z-0">
         <div className="max-w-7xl mx-auto">
-          {/* Title */}
-          <div className="mb-8">
-            <div className="label-sm text-hard-gold mb-2">YOUR PROFILE</div>
-            <h2 className="text-3xl md:text-4xl font-impact text-white uppercase tracking-tight">REVIEW & ADJUST</h2>
-            <p className="text-zinc-500 text-sm mt-2">looks good? tweak anything before saving.</p>
+          {/* Title - Compact */}
+          <div className="mb-4 sm:mb-6">
+            <div className="label-sm text-hard-gold mb-1">YOUR PROFILE</div>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-impact text-white uppercase tracking-tight">REVIEW & ADJUST</h2>
+            <p className="text-zinc-500 text-xs mt-1">looks good? tweak anything before saving.</p>
           </div>
 
           {/* Two Column Grid */}
