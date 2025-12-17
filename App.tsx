@@ -710,8 +710,7 @@ function App() {
 
           {/* SYSTEM TICKER */}
           <SystemTicker />
-
-        </div >
+        </div>
 
         {/* Mobile Bottom Navigation */}
         < BottomTabs activeModule={activeModule} setModule={setActiveModule} />

@@ -562,13 +562,11 @@ export const Simulator: React.FC<SimulatorProps> = ({ userProfile, firebaseUid, 
         <div className="flex-1 overflow-y-auto bg-matte-base">
           <div className="p-6 sm:p-8 lg:p-12">
             <div className="max-w-5xl mx-auto">
-
               {/* Hero Section - Headline + Action */}
               <div className="text-center mb-10 sm:mb-14">
                 <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-impact text-white mb-8 uppercase leading-tight tracking-wide">
                   {analysisResult.headline}
                 </h3>
-
                 {/* Recommended Action - Prominent Card */}
                 {analysisResult.recommendedNextMove && (() => {
                   const actionStyle = getActionStyle(analysisResult.recommendedNextMove);
@@ -852,44 +850,50 @@ export const Simulator: React.FC<SimulatorProps> = ({ userProfile, firebaseUid, 
               </div>
 
               {/* Divider between exchanges */}
-              {idx < simHistory.length - 1 && (
-                <div className="flex items-center gap-4 py-4">
-                  <div className="flex-1 h-px bg-zinc-800"></div>
-                  <span className="text-[10px] text-zinc-600 font-mono">EXCHANGE {idx + 2}</span>
-                  <div className="flex-1 h-px bg-zinc-800"></div>
-                </div>
-              )}
-            </div>
+              {
+                idx < simHistory.length - 1 && (
+                  <div className="flex items-center gap-4 py-4">
+                    <div className="flex-1 h-px bg-zinc-800"></div>
+                    <span className="text-[10px] text-zinc-600 font-mono">EXCHANGE {idx + 2}</span>
+                    <div className="flex-1 h-px bg-zinc-800"></div>
+                  </div>
+                )
+              }
+            </div >
           ))}
 
           {/* Show pending message immediately */}
-          {pendingMessage && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-              <div className="flex justify-end lg:justify-start">
-                <div className="max-w-[90%] lg:max-w-full bg-white text-black px-5 py-4 text-sm font-medium leading-relaxed border border-zinc-200 shadow-[4px_4px_0px_rgba(0,0,0,0.4)] opacity-70">
-                  <div className="label-sm text-zinc-500 mb-2">SENDING...</div>
-                  <p>{pendingMessage}</p>
+          {
+            pendingMessage && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                <div className="flex justify-end lg:justify-start">
+                  <div className="max-w-[90%] lg:max-w-full bg-white text-black px-5 py-4 text-sm font-medium leading-relaxed border border-zinc-200 shadow-[4px_4px_0px_rgba(0,0,0,0.4)] opacity-70">
+                    <div className="label-sm text-zinc-500 mb-2">SENDING...</div>
+                    <p>{pendingMessage}</p>
+                  </div>
+                </div>
+                <div className="bg-zinc-900/50 border border-zinc-800 p-5 flex items-center justify-center">
+                  <span className="label-sm text-zinc-600 animate-pulse">ANALYZING...</span>
                 </div>
               </div>
-              <div className="bg-zinc-900/50 border border-zinc-800 p-5 flex items-center justify-center">
-                <span className="label-sm text-zinc-600 animate-pulse">ANALYZING...</span>
-              </div>
-            </div>
-          )}
+            )
+          }
 
-          {chatLoading && !pendingMessage && (
-            <div className="flex justify-start">
-              <div className="bg-zinc-900 px-5 py-4 border border-zinc-800">
-                <span className="label-sm text-hard-blue animate-pulse">AI IS THINKING...</span>
+          {
+            chatLoading && !pendingMessage && (
+              <div className="flex justify-start">
+                <div className="bg-zinc-900 px-5 py-4 border border-zinc-800">
+                  <span className="label-sm text-hard-blue animate-pulse">AI IS THINKING...</span>
+                </div>
               </div>
-            </div>
-          )}
+            )
+          }
           <div ref={chatEndRef} />
-        </div>
-      </div>
+        </div >
+      </div >
 
       {/* INPUT AREA - More prominent */}
-      <div className="p-3 sm:p-4 bg-zinc-900 border-t border-zinc-700 relative z-20 shrink-0">
+      < div className="p-3 sm:p-4 bg-zinc-900 border-t border-zinc-700 relative z-20 shrink-0" >
         <form onSubmit={runSimulation} className="flex gap-0 border-2 border-zinc-600 focus-within:border-hard-blue transition-colors bg-black">
           <input
             type="text"
@@ -907,8 +911,8 @@ export const Simulator: React.FC<SimulatorProps> = ({ userProfile, firebaseUid, 
             SEND
           </button>
         </form>
-      </div>
+      </div >
 
-    </div>
+    </div >
   );
 };
