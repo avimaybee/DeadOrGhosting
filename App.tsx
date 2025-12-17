@@ -163,8 +163,8 @@ const WellbeingCheckIn = ({ reason, onDismiss, onDismissForDay }: {
 };
 
 // --- COMPONENT: SIDE DOCK (Desktop) ---
-const SideDock = ({ activeModule, setModule, authUser, onSignOut }: { 
-  activeModule: Module, 
+const SideDock = ({ activeModule, setModule, authUser, onSignOut }: {
+  activeModule: Module,
   setModule: (m: Module) => void,
   authUser?: AuthUser | null,
   onSignOut?: () => void
@@ -214,9 +214,9 @@ const SideDock = ({ activeModule, setModule, authUser, onSignOut }: {
           <div className="flex flex-col items-center gap-3 mb-4 group">
             <div className="relative">
               {authUser.photoURL ? (
-                <img 
-                  src={authUser.photoURL} 
-                  alt={authUser.displayName || 'User'} 
+                <img
+                  src={authUser.photoURL}
+                  alt={authUser.displayName || 'User'}
                   className="w-10 h-10 rounded-full border-2 border-zinc-700 group-hover:border-zinc-500 transition-all shadow-lg"
                 />
               ) : (
@@ -335,8 +335,8 @@ const DockItem = ({ active, onClick, label, index }: { active: boolean, onClick:
 );
 
 // --- COMPONENT: STANDBY SCREEN (EDITORIAL) ---
-const StandbyScreen = ({ onActivate, hasProfile, authUser }: { 
-  onActivate: (m: Module) => void, 
+const StandbyScreen = ({ onActivate, hasProfile, authUser }: {
+  onActivate: (m: Module) => void,
   hasProfile: boolean,
   authUser?: AuthUser | null
 }) => (
@@ -346,15 +346,7 @@ const StandbyScreen = ({ onActivate, hasProfile, authUser }: {
     <div className="absolute top-0 right-0 w-[50%] h-full border-l border-zinc-900/50 hidden md:block"></div>
     <AbstractGrid className="absolute bottom-[-10%] left-[-10%] w-[40vw] h-[40vw] text-zinc-800 opacity-20 pointer-events-none animate-spin-slow" />
 
-    {/* Mobile Scroll Indicator */}
-    <div className="md:hidden absolute bottom-24 left-1/2 -translate-x-1/2 z-20 animate-bounce pointer-events-none">
-      <div className="flex flex-col items-center gap-1 text-zinc-600">
-        <span className="text-[9px] font-mono uppercase tracking-wider">scroll</span>
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-        </svg>
-      </div>
-    </div>
+
 
     {/* CONTENT GRID */}
     <div className="flex-1 grid grid-cols-1 md:grid-cols-2 md:h-full">
@@ -620,12 +612,7 @@ function App() {
       <div className="flex h-screen w-screen bg-matte-base items-center justify-center">
         <div className="text-center">
           <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider mb-4">AUTHENTICATING...</div>
-          <div className="animate-spin">
-            <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <circle cx="12" cy="12" r="9" strokeWidth="2" opacity="0.2" />
-              <path d="M12 3c4.97 0 9 4.03 9 9" strokeWidth="2" strokeDasharray="20" strokeDashoffset="0" />
-            </svg>
-          </div>
+          <div className="w-8 h-8 border-2 border-zinc-700 border-t-white rounded-full animate-spin"></div>
         </div>
       </div>
     );
@@ -633,107 +620,102 @@ function App() {
 
   // Show auth modal if not signed in
   if (!authUser) {
-    return <AuthModal onAuthSuccess={() => {}} />;
+    return <AuthModal onAuthSuccess={() => { }} />;
   }
 
   return (
     <ToastProvider>
-    <div className="flex h-screen w-screen bg-matte-base text-zinc-100 overflow-hidden font-sans selection:bg-white selection:text-black">
+      <div className="flex h-screen w-screen bg-matte-base text-zinc-100 overflow-hidden font-sans selection:bg-white selection:text-black">
 
-      {/* Show loading state while syncing user with database */}
-      {isLoadingUser && (
-        <div className="absolute inset-0 bg-black z-[999] flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider mb-4">SYNCING...</div>
-            <div className="animate-spin">
-              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <circle cx="12" cy="12" r="9" strokeWidth="2" opacity="0.2" />
-                <path d="M12 3c4.97 0 9 4.03 9 9" strokeWidth="2" strokeDasharray="20" strokeDashoffset="0" />
-              </svg>
+        {/* Show loading state while syncing user with database */}
+        {isLoadingUser && (
+          <div className="absolute inset-0 bg-black z-[999] flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider mb-4">SYNCING...</div>
+              <div className="w-8 h-8 border-2 border-zinc-700 border-t-white rounded-full animate-spin"></div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Wellbeing Check-in Modal */}
-      {wellbeingCheckIn?.triggered && wellbeingCheckIn.reason && (
-        <WellbeingCheckIn
-          reason={wellbeingCheckIn.reason}
-          onDismiss={handleWellbeingDismiss}
-          onDismissForDay={handleWellbeingDismissForDay}
-        />
-      )}
+        {/* Wellbeing Check-in Modal */}
+        {wellbeingCheckIn?.triggered && wellbeingCheckIn.reason && (
+          <WellbeingCheckIn
+            reason={wellbeingCheckIn.reason}
+            onDismiss={handleWellbeingDismiss}
+            onDismissForDay={handleWellbeingDismissForDay}
+          />
+        )}
 
 
-      <SideDock activeModule={activeModule} setModule={setActiveModule} authUser={authUser} onSignOut={handleSignOut} />
+        <SideDock activeModule={activeModule} setModule={setActiveModule} authUser={authUser} onSignOut={handleSignOut} />
 
-      {/* MAIN CONTAINER */}
-      <div className="flex-1 relative h-full flex flex-col p-2 md:p-4 overflow-y-auto md:overflow-hidden pb-20 md:pb-4 scrollbar-hide">
+        {/* MAIN CONTAINER */}
+        <div className="flex-1 relative h-full flex flex-col p-2 md:p-4 overflow-y-auto md:overflow-hidden pb-20 md:pb-4 scrollbar-hide">
 
-        {/* VIEWPORT FRAME */}
-        <div className="relative w-full flex-1 min-h-0 border border-zinc-800 bg-black/20 overflow-hidden flex flex-col shadow-2xl">
-          <CornerNodes />
+          {/* VIEWPORT FRAME */}
+          <div className="relative w-full flex-1 min-h-0 border border-zinc-800 bg-black/20 overflow-hidden flex flex-col shadow-2xl">
+            <CornerNodes />
 
-          {state === 'loading' && <LoadingScreen />}
+            {state === 'loading' && <LoadingScreen />}
 
-          {/* STANDBY MODULE */}
-          {activeModule === 'standby' && (
-            <StandbyScreen onActivate={setActiveModule} hasProfile={!!(userProfile && userProfile.preferredTone)} authUser={authUser} />
-          )}
+            {/* STANDBY MODULE */}
+            {activeModule === 'standby' && (
+              <StandbyScreen onActivate={setActiveModule} hasProfile={!!(userProfile && userProfile.preferredTone)} authUser={authUser} />
+            )}
 
-          {/* PRACTICE MODE MODULE */}
-          {activeModule === 'simulator' && (
-            <div className="h-full w-full flex flex-col animate-fade-in bg-matte-base">
-              <Simulator
-                userProfile={userProfile}
-                firebaseUid={authUser.uid}
-                userId={userId}
-              />
-            </div>
-          )}
+            {/* PRACTICE MODE MODULE */}
+            {activeModule === 'simulator' && (
+              <div className="h-full w-full flex flex-col animate-fade-in bg-matte-base">
+                <Simulator
+                  userProfile={userProfile}
+                  firebaseUid={authUser.uid}
+                  userId={userId}
+                />
+              </div>
+            )}
 
-          {/* QUICK MODE MODULE */}
-          {activeModule === 'quick' && (
-            <div className="h-full w-full flex flex-col animate-fade-in">
-              <QuickAdvisor
-                onBack={() => setActiveModule('standby')}
-                userProfile={userProfile}
-                firebaseUid={authUser.uid}
-                userId={userId}
-              />
-            </div>
-          )}
+            {/* QUICK MODE MODULE */}
+            {activeModule === 'quick' && (
+              <div className="h-full w-full flex flex-col animate-fade-in">
+                <QuickAdvisor
+                  onBack={() => setActiveModule('standby')}
+                  userProfile={userProfile}
+                  firebaseUid={authUser.uid}
+                  userId={userId}
+                />
+              </div>
+            )}
 
-          {/* USER PROFILE MODULE */}
-          {activeModule === 'profile' && (
-            <div className="h-full w-full flex flex-col animate-fade-in">
-              <UserProfile
-                onBack={() => setActiveModule('standby')}
-                onSave={handleSaveProfile}
-                initialProfile={userProfile}
-                userId={userId}
-                authUser={authUser}
-                onSignOut={handleSignOut}
-              />
-            </div>
-          )}
+            {/* USER PROFILE MODULE */}
+            {activeModule === 'profile' && (
+              <div className="h-full w-full flex flex-col animate-fade-in">
+                <UserProfile
+                  onBack={() => setActiveModule('standby')}
+                  onSave={handleSaveProfile}
+                  initialProfile={userProfile}
+                  userId={userId}
+                  authUser={authUser}
+                  onSignOut={handleSignOut}
+                />
+              </div>
+            )}
 
-          {/* HISTORY MODULE */}
-          {activeModule === 'history' && (
-            <div className="h-full w-full flex flex-col animate-fade-in bg-matte-base">
-              <History firebaseUid={authUser?.uid} />
-            </div>
-          )}
-        </div>
+            {/* HISTORY MODULE */}
+            {activeModule === 'history' && (
+              <div className="h-full w-full flex flex-col animate-fade-in bg-matte-base">
+                <History firebaseUid={authUser?.uid} />
+              </div>
+            )}
+          </div>
 
-        {/* SYSTEM TICKER */}
-        <SystemTicker />
+          {/* SYSTEM TICKER */}
+          <SystemTicker />
 
+        </div >
+
+        {/* Mobile Bottom Navigation */}
+        < BottomTabs activeModule={activeModule} setModule={setActiveModule} />
       </div >
-
-      {/* Mobile Bottom Navigation */}
-      < BottomTabs activeModule={activeModule} setModule={setActiveModule} />
-    </div >
     </ToastProvider>
   );
 }
