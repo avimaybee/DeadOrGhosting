@@ -1262,43 +1262,41 @@ User's Own Notes: ${currentNotes.customNotes || 'none'}]
     // Add the user message
     parts.push({ text: userMessage });
 
-    const model = ai.getGenerativeModel({
-      model: "gemini-2.0-flash-exp", // Using a real model name to avoid tsc errors if possible, or keeping the user's string if it's a proxy
-      systemInstruction: THERAPIST_SYSTEM_INSTRUCTION,
-      tools: [{
-        functionDeclarations: [
-          SESSION_ANALYSIS_TOOL,
-          ASSIGN_EXERCISE_TOOL,
-          LOG_EPIPHANY_TOOL,
-          PERSPECTIVE_BRIDGE_TOOL,
-          COMMUNICATION_INSIGHT_TOOL,
-          COMMUNICATION_INSIGHT_TOOL,
-          FLAG_PROJECTION_TOOL,
-          CLOSURE_SCRIPT_TOOL,
-          SAFETY_INTERVENTION_TOOL,
-          PARENTAL_PATTERN_TOOL,
-          VALUES_MATRIX_TOOL
-        ]
-      }]
-    });
-
-    const result = await model.generateContentStream({
+    const result = await ai.models.generateContentStream({
+      model: "gemini-3-flash-preview",
       contents: [{ role: "user", parts }],
-      safetySettings: safetySettings,
+      config: {
+        systemInstruction: THERAPIST_SYSTEM_INSTRUCTION,
+        tools: [{
+          functionDeclarations: [
+            SESSION_ANALYSIS_TOOL,
+            ASSIGN_EXERCISE_TOOL,
+            LOG_EPIPHANY_TOOL,
+            PERSPECTIVE_BRIDGE_TOOL,
+            COMMUNICATION_INSIGHT_TOOL,
+            FLAG_PROJECTION_TOOL,
+            CLOSURE_SCRIPT_TOOL,
+            SAFETY_INTERVENTION_TOOL,
+            PARENTAL_PATTERN_TOOL,
+            VALUES_MATRIX_TOOL
+          ]
+        }],
+        safetySettings: safetySettings,
+      }
     });
 
     let fullText = "";
 
     for await (const chunk of result.stream) {
       // Handle text chunks
-      const chunkText = chunk.text();
+      const chunkText = chunk.text;
       if (chunkText) {
         fullText += chunkText;
         onChunk(chunkText);
       }
 
       // Handle function calls
-      const functionCalls = chunk.functionCalls();
+      const functionCalls = chunk.functionCalls;
       if (functionCalls && functionCalls.length > 0) {
         for (const fc of functionCalls) {
           if (fc.name === 'update_session_analysis' && fc.args) {
@@ -1346,26 +1344,25 @@ export const getTherapistAdvice = async (
 
     parts.push({ text: userMessage });
 
-    const model = ai.getGenerativeModel({
-      model: "gemini-2.0-flash-exp",
-      systemInstruction: THERAPIST_SYSTEM_INSTRUCTION,
-      tools: [{ functionDeclarations: [SESSION_ANALYSIS_TOOL] }]
-    });
-
     const result = await retryWithBackoff(
-      () => model.generateContent({
+      () => ai.models.generateContent({
+        model: "gemini-2.0-flash-exp",
         contents: [{ role: "user", parts }],
-        safetySettings: safetySettings,
+        config: {
+          systemInstruction: THERAPIST_SYSTEM_INSTRUCTION,
+          tools: [{ functionDeclarations: [SESSION_ANALYSIS_TOOL] }],
+          safetySettings: safetySettings,
+        }
       }),
       'getTherapistAdvice'
     );
 
-    const response = result.response;
-    const reply = response.text() || "i'm having trouble processing that. can you try rephrasing?";
+    const response = result;
+    const reply = response.text || "i'm having trouble processing that. can you try rephrasing?";
 
     // Extract clinical notes from any function calls
     let clinicalNotes: Partial<ClinicalNotes> | undefined;
-    const functionCalls = response.functionCalls();
+    const functionCalls = response.functionCalls;
     if (functionCalls && functionCalls.length > 0) {
       const analysisCall = functionCalls.find(fc => fc.name === 'update_session_analysis');
       if (analysisCall?.args) {
