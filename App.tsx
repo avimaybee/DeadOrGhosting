@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Zap, MessageSquare, User, ArrowRight, LogOut, Clock } from 'lucide-react';
+import { Home, Zap, MessageSquare, User, ArrowRight, LogOut, Clock, HeartHandshake } from 'lucide-react';
 import { checkWellbeing, triggerWellbeingCheckIn, dismissWellbeingCheckIn, clearWellbeingTrigger } from './services/feedbackService';
 import { getOrCreateUser, getStyleProfile, saveStyleProfile } from './services/dbService';
 import { onAuthChange, signOutUser, AuthUser, logScreenView } from './services/firebaseService';
@@ -9,11 +9,13 @@ import { QuickAdvisor } from './components/QuickAdvisor';
 import { UserProfile } from './components/UserProfile';
 import { History } from './components/History';
 import { AuthModal } from './components/AuthModal';
+import { TherapistChat } from './components/TherapistChat';
 import { ToastProvider } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AppState, UserStyleProfile, WellbeingState } from './types';
+import { Logo } from './components/Logo';
 
-type Module = 'standby' | 'simulator' | 'quick' | 'profile' | 'history';
+type Module = 'standby' | 'simulator' | 'quick' | 'profile' | 'history' | 'therapist';
 
 // --- VISUAL ASSETS ---
 // AbstractGrid and other custom decorative elements retained
@@ -173,7 +175,7 @@ const SideDock = ({ activeModule, setModule, authUser, onSignOut }: {
   return (
     <div className="hidden md:flex w-20 border-r border-zinc-800 bg-matte-base flex-col items-center py-6 z-50 h-full relative">
       <div className="mb-10">
-        <StarBurst className="w-6 h-6 text-white animate-spin-slow" />
+        <Logo size={40} className="animate-pulse" />
       </div>
 
       <div className="flex-1 flex flex-col gap-8 w-full px-2">
@@ -202,10 +204,16 @@ const SideDock = ({ activeModule, setModule, authUser, onSignOut }: {
           index="04"
         />
         <DockItem
+          active={activeModule === 'therapist'}
+          onClick={() => setModule('therapist')}
+          label="THERAPY"
+          index="05"
+        />
+        <DockItem
           active={activeModule === 'profile'}
           onClick={() => setModule('profile')}
           label="PROFILE"
-          index="05"
+          index="06"
         />
       </div>
 
@@ -281,6 +289,12 @@ const BottomTabs = ({ activeModule, setModule }: { activeModule: Module, setModu
           onClick={() => setModule('profile')}
           label="YOU"
           Icon={User}
+        />
+        <MobileTabItemSvg
+          active={activeModule === 'therapist'}
+          onClick={() => setModule('therapist')}
+          label="TALK"
+          Icon={HeartHandshake}
         />
       </div>
     </div>
@@ -414,6 +428,22 @@ const StandbyScreen = ({ onActivate, hasProfile, authUser, userProfile }: {
             // PASTE MESSAGE → GET ADVICE
           </div>
         </button>
+        {/* THERAPIST MODE */}
+        <button
+          onClick={() => onActivate('therapist')}
+          className="flex-1 border-b border-zinc-800 p-8 text-left hover:bg-rose-900/20 active:bg-rose-900/30 transition-all group relative overflow-hidden flex flex-col justify-center"
+        >
+          <div className="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-all duration-500">
+            <HeartHandshake className="w-8 h-8 text-rose-400" />
+          </div>
+          <div className="label-sm text-zinc-500 group-hover:text-rose-400 transition-colors mb-1">DEEP DIVE</div>
+          <h2 className="text-4xl font-impact text-zinc-300 group-hover:text-white transition-colors uppercase">
+            Therapist Mode
+          </h2>
+          <div className="mt-2 opacity-60 group-hover:opacity-100 transition-opacity max-w-md text-[11px] font-mono text-zinc-400">
+            // UNCOVER PATTERNS, GET CLARITY
+          </div>
+        </button>
         {/* PRACTICE MODE */}
         <button
           onClick={() => onActivate('simulator')}
@@ -422,7 +452,7 @@ const StandbyScreen = ({ onActivate, hasProfile, authUser, userProfile }: {
           <div className="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-all duration-500">
             <ArrowRight className="w-8 h-8 text-hard-blue -rotate-45" />
           </div>
-          <div className="label-sm text-zinc-500 group-hover:text-hard-blue transition-colors mb-1">MODULE 02</div>
+          <div className="label-sm text-zinc-500 group-hover:text-hard-blue transition-colors mb-1">MODULE 03</div>
           <h2 className="text-4xl font-impact text-zinc-300 group-hover:text-white transition-colors uppercase">
             Practice Mode
           </h2>
@@ -528,6 +558,30 @@ const StandbyScreen = ({ onActivate, hasProfile, authUser, userProfile }: {
           </div>
         </button>
 
+        {/* THERAPIST MODE - Rose */}
+        <button
+          onClick={() => onActivate('therapist')}
+          className="w-full h-32 relative border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/60 transition-all group overflow-hidden flex flex-col justify-between p-4"
+        >
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-rose-500/50 to-transparent opacity-50"></div>
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-1.5 h-1.5 bg-rose-500"></span>
+                <span className="text-[9px] font-mono text-rose-400 tracking-widest">DEEP_DIVE</span>
+              </div>
+              <h2 className="text-3xl font-impact text-white uppercase tracking-wide">THERAPIST</h2>
+            </div>
+            <HeartHandshake className="w-5 h-5 text-zinc-600 group-hover:text-rose-400 transition-colors" />
+          </div>
+          <div className="flex items-end justify-between">
+            <span className="text-[10px] font-mono text-zinc-500 max-w-[150px] text-left">// UNCOVER PATTERNS, GET CLARITY</span>
+            <div className="px-2 py-1 border border-zinc-700 text-[9px] text-zinc-400 font-mono uppercase group-hover:bg-rose-500 group-hover:text-black group-hover:border-rose-500 transition-colors">
+              ENTER
+            </div>
+          </div>
+        </button>
+
         {/* PRACTICE MODE - Blue */}
         <button
           onClick={() => onActivate('simulator')}
@@ -538,7 +592,7 @@ const StandbyScreen = ({ onActivate, hasProfile, authUser, userProfile }: {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="w-1.5 h-1.5 bg-hard-blue"></span>
-                <span className="text-[9px] font-mono text-hard-blue tracking-widest">SIMULATION_02</span>
+                <span className="text-[9px] font-mono text-hard-blue tracking-widest">SIMULATION_03</span>
               </div>
               <h2 className="text-3xl font-impact text-white uppercase tracking-wide">PRACTICE</h2>
             </div>
@@ -835,6 +889,15 @@ function App() {
               <div className="h-full w-full flex flex-col animate-fade-in bg-matte-base">
                 <ErrorBoundary>
                   <History firebaseUid={authUser?.uid} onBack={() => setActiveModule('standby')} />
+                </ErrorBoundary>
+              </div>
+            )}
+
+            {/* THERAPIST CHAT MODULE */}
+            {activeModule === 'therapist' && (
+              <div className="h-full w-full flex flex-col animate-fade-in">
+                <ErrorBoundary>
+                  <TherapistChat onBack={() => setActiveModule('standby')} firebaseUid={authUser?.uid} />
                 </ErrorBoundary>
               </div>
             )}

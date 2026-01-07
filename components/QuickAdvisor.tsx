@@ -5,6 +5,7 @@ import { saveFeedback, logSession } from '../services/feedbackService';
 import { createSession, submitFeedback } from '../services/dbService';
 import { Sparkles, Upload, X, Image, ThumbsUp, Minus, ThumbsDown, ArrowLeft, Info, CornerDownRight, Link2, Copy, Check } from 'lucide-react';
 import { useGlobalToast } from './Toast';
+import { Logo } from './Logo';
 
 interface QuickAdvisorProps {
   onBack: () => void;

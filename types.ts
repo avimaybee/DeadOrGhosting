@@ -269,3 +269,136 @@ export interface WellbeingState {
   triggered: boolean; // Should we show check-in
   reason?: 'late_night' | 'same_person' | 'high_frequency' | 'high_risk';
 }
+
+// ============================================
+// PHASE 4: Relationship Therapist Mode
+// ============================================
+
+
+export interface ClosureScript {
+  tone: 'polite_distant' | 'firm_boundary' | 'warm_closure' | 'absolute_silence';
+  script: string;
+  explanation: string;
+}
+
+export interface SafetyIntervention {
+  level: 'low' | 'medium' | 'high' | 'crisis';
+  reason: string;
+  resources: { name: string; contact?: string; url?: string }[];
+  calmDownText: string;
+}
+
+export interface ParentalPatternV2 {
+  parentTrait: string;
+  partnerTrait: string;
+  dynamicName: string; // e.g. "The Absent Father / Distant Boyfriend Cycle"
+  insight: string;
+}
+
+export interface ValuesMatrix {
+  userValues: string[];
+  partnerValues: string[]; // Inferred
+  alignmentScore: number; // 0-100
+  conflicts: string[];
+  synergies: string[];
+}
+
+
+/**
+ * A single message in the therapist chat history.
+ */
+export interface TherapistMessage {
+  role: 'user' | 'therapist';
+  content: string;
+  timestamp: number;
+  images?: string[]; // Optional attached images (base64)
+  // New Interactive Elements
+  perspective?: PerspectiveInsight;
+  pattern?: PatternInsight;
+  projection?: ProjectionInsight;
+  exercise?: TherapistExercise;
+
+  // Psychological Depth Elements
+  closureScript?: ClosureScript;
+  safetyIntervention?: SafetyIntervention;
+  parentalPattern?: ParentalPatternV2;
+  valuesMatrix?: ValuesMatrix;
+}
+
+/**
+ * Clinical notes updated by the AI during the session.
+ * These are editable by the user and fed back to the AI.
+ */
+export interface ClinicalNotes {
+  attachmentStyle?: 'anxious' | 'avoidant' | 'secure' | 'fearful-avoidant' | 'unknown';
+  keyThemes: string[]; // e.g., "Trust issues", "Communication breakdown", "Projection"
+  emotionalState?: string; // e.g., "Anxious", "Defensive", "Hopeful"
+  relationshipDynamic?: string; // e.g., "Pursuer-Distancer", "Codependent", "Healthy"
+  userInsights: string[]; // Key realizations the user has had
+  actionItems: string[]; // Suggested exercises or next steps
+  customNotes?: string; // Free-form notes the user can edit
+  epiphanies?: Epiphany[]; // Tracked realizations for high-level progress
+}
+
+/**
+ * A major realization or "Aha!" moment logged by the AI.
+ */
+export interface Epiphany {
+  id: string;
+  content: string;
+  category: 'self' | 'partner' | 'dynamic' | 'growth';
+  timestamp: number;
+}
+
+/**
+ * Specialized insights provided by the therapist tools.
+ */
+export interface PerspectiveInsight {
+  partnerPerspective: string;
+  suggestedMotive: string;
+}
+
+export interface PatternInsight {
+  patternName: string; // e.g., "The Four Horsemen: Contempt"
+  explanation: string;
+  suggestion: string;
+}
+
+export interface ProjectionInsight {
+  behavior: string;
+  potentialRoot: string;
+}
+
+/**
+ * Interactive exercises assigned by the therapist.
+ */
+export type ExerciseType = 'boundary_builder' | 'needs_assessment' | 'attachment_quiz';
+
+export interface TherapistExercise {
+  type: ExerciseType;
+  context: string; // Why this exercise was assigned
+  completed?: boolean;
+  result?: any; // The result of the exercise (e.g., list of boundaries)
+}
+
+/**
+ * Response from the therapist AI.
+ */
+export interface TherapistResponse {
+  reply: string; // The therapist's chat message
+  interactionId: string; // ID of the interaction for stateful continuity
+  clinicalNotes?: Partial<ClinicalNotes>; // Updated clinical notes from this turn
+  exercise?: TherapistExercise; // Optional interactive exercise assigned
+}
+
+export interface TherapistMessage {
+  role: 'user' | 'therapist';
+  content: string;
+  timestamp: number;
+  images?: string[]; // Optional attached images (base64)
+  exercise?: TherapistExercise; // Optional interactive exercise
+  perspective?: PerspectiveInsight; // Perspective Bridge result
+  pattern?: PatternInsight; // Masterclass insight
+  projection?: ProjectionInsight; // Shadow persona detection
+}
+

@@ -713,12 +713,12 @@ export const getQuickAdvice = async (
             ],
             "conversationHook": "text to keep convo flowing after replies"
           },
-          { /* option 2 - same structure, DIFFERENT approach */ },
-          { /* option 3 - same structure, DIFFERENT approach */ }
+          { "replies": [...], "conversationHook": "..." }, // Option 2
+          { "replies": [...], "conversationHook": "..." }  // Option 3
         ],
-        "bold": [ /* 3 options, same structure as smooth */ ],
-        "witty": [ /* 3 options, same structure - SUBTLE cleverness, NOT cringe */ ],
-        "authentic": [ /* 3 options, same structure - user's elevated vibe */ ],
+        "bold": [ /* 3 distinct options, same structure as smooth */ ],
+        "witty": [ /* 3 distinct options, same structure - SUBTLE cleverness, NOT cringe */ ],
+        "authentic": [ /* 3 distinct options, same structure - user's elevated vibe */ ],
         "wait": "string OR null (if they should let them come to you, explain why. null if replying now is good)"
       },
       "proTip": "string (one insight - start with 'ngl', 'tbh', 'fr' - empowering not preachy)",
@@ -728,6 +728,7 @@ export const getQuickAdvice = async (
     }
     
     IMPORTANT FOR MULTI-BUBBLE REPLIES:
+    - YOU MUST PROVIDE EXACTLY 3 OPTIONS FOR EACH CATEGORY (Smooth, Bold, Witty, Authentic).
     - Each OPTION in each category must have replies for ALL unreplied messages
     - Replies should be in the same chronological order as extractedUnrepliedMessages
     - The conversationHook comes AFTER all replies - it's the "keep it going" text
@@ -952,6 +953,437 @@ IMPORTANT:
       confidence: 0,
       extractedPatterns: ['Could not analyze - try adding more samples'],
       summary: "couldn't read ur vibe properly, add more texts bestie"
+    };
+  }
+};
+// ============================================
+// PHASE 4: RELATIONSHIP THERAPIST MODE
+// ============================================
+
+import { TherapistResponse, ClinicalNotes } from "../types";
+
+const THERAPIST_SYSTEM_INSTRUCTION = `You are a Relationship Therapist AI. Your role is to help users navigate their relationship challenges with empathy, wisdom, and honesty.
+
+CORE PRINCIPLES:
+1. UNBIASED OBSERVER: You do not take sides. You help the user see ALL perspectives, including uncomfortable truths they might be avoiding.
+2. PROBING QUESTIONS: Ask clarifying questions to uncover the REAL issues. Don't accept surface-level explanations. Dig deeper.
+3. PATTERN RECOGNITION: Identify recurring patterns in their behavior and their partner's behavior. Help them see what they can't.
+4. EMPOWERMENT: Guide them toward their own realizations rather than telling them what to do. Use Socratic questioning.
+5. HONESTY: Be kind, but don't sugarcoat. If they're in a toxic situation, gently help them see it. If they're the problem, help them recognize it without shaming.
+
+COMMUNICATION STYLE:
+- Warm but professional
+- Use reflective listening: "It sounds like you're feeling..."
+- Ask ONE powerful question at a time, then let them process
+- Validate their emotions while challenging their assumptions
+- Use lowercase for a more intimate, conversational feel
+- Avoid being preachy or lecture-y. this is a conversation, not a ted talk.
+- you can use light slang naturally (ngl, tbh) but keep it professional-ish
+
+WHAT YOU UNCOVER:
+- Attachment styles at play
+- Communication breakdowns
+- Unmet needs (theirs and their partner's)
+- Projection and defensiveness
+- Red flags they might be minimizing
+- Green flags they might be overlooking
+- Their role in the dynamic (not just the other person's)
+
+IMPORTANT: After your response, you MUST call the update_session_analysis function to update your clinical observations.
+Always include keyThemes even if just ["initial assessment"].
+
+INTERACTIVE EXERCISES:
+You have access to an "assign_exercise" tool. Use it when you believe the user would benefit from a structured reflection activity:
+- **boundary_builder**: When they struggle with setting limits or feel overwhelmed by others' demands.
+- **needs_assessment**: When they seem disconnected from what they actually want or need.
+- **attachment_quiz**: When their attachment style is unclear or they want to understand their patterns better.
+Only assign ONE exercise at a time, and explain why you're assigning it in your response text.
+
+ADVANCED THERAPEUTIC TOOLS:
+- **log_epiphany**: Whenever the user reaches a breakthrough or a major realization, log it. These will be tracked in their Insight Timeline.
+- **show_perspective_bridge**: Use this to rebuild empathy. Reconstruct the partner's likely inner experience or "Core Wound" based on the patterns you see. This helps the user see the "Untold Story."
+- **show_communication_insight**: Provide academic/contextual education (e.g., Gottman's Four Horsemen) when you see specific behaviors. Explain the "WHY" behind the behavior.
+- **flag_projection**: If the user is attributing their own traits or fears to their partner without evidence, gently point this out as a potential projection.
+- **generate_closure_script**: If the user needs to end things or set a final boundary, generate a "Final Word" script.
+- **trigger_safety_intervention**: If the user's mental health seems at immediate risk or the relationship sounds abusive (not just toxic), break character to provide resources.
+- **log_parental_pattern**: If the user mentions family dynamics that mirror their current relationship, flag the "Generational Ghost".
+- **assign_values_matrix**: If the conflict seems to be about fundamental lifestyle differences (money, kids, future), assign this matrix to visualize the gap.
+
+DYNAMIC TONE ADAPTATION:
+Pay attention to the user's emotional state in \`clinicalNotes\` and their latest message.
+- If they are **Agitated/Angry**: Slow down. Use calmer, shorter sentences. Validate before analyzing.
+- If they are **Intellectualizing**: Match their logic but gently guide them to feelings.
+- If they are **Defensive**: Be extremely curious and non-judgmental. Use "I wonder if..." instead of "You are...".
+
+
+GENTLE NUDGES:
+If you sense the user is getting highly frustrated or emotional, do not use a separate tool. Simply give a brief, warm nudge to "take a breath" or "step back for a second" before continuing your analysis.
+
+REMEMBER: Your goal is not to give advice, but to help them DISCOVER clarity through conversation. Be the therapist friend they wish they had.`;
+
+// Tool definition for session analysis
+const SESSION_ANALYSIS_TOOL = {
+  name: "update_session_analysis",
+  description: "Update the clinical notes with new observations about the user's relationship patterns, emotional state, and insights discovered during the session. Call this after every response.",
+  parameters: {
+    type: "object",
+    properties: {
+      attachmentStyle: {
+        type: "string",
+        enum: ["anxious", "avoidant", "secure", "fearful-avoidant", "unknown"],
+        description: "The user's apparent attachment style based on conversation"
+      },
+      keyThemes: {
+        type: "array",
+        items: { type: "string" },
+        description: "Key relationship themes identified (e.g., 'trust issues', 'communication breakdown')"
+      },
+      emotionalState: {
+        type: "string",
+        description: "The user's current emotional state (e.g., 'anxious', 'defensive', 'hopeful')"
+      },
+      relationshipDynamic: {
+        type: "string",
+        description: "The dynamic between the user and their partner (e.g., 'pursuer-distancer')"
+      },
+      userInsights: {
+        type: "array",
+        items: { type: "string" },
+        description: "Key realizations the user has had during the session"
+      },
+      actionItems: {
+        type: "array",
+        items: { type: "string" },
+        description: "Suggested exercises or next steps for the user"
+      }
+    },
+    required: ["keyThemes"]
+  }
+};
+
+// Tool definition for assigning interactive exercises
+const ASSIGN_EXERCISE_TOOL = {
+  name: "assign_exercise",
+  description: "Assign an interactive exercise to help the user with a specific aspect of their relationship. Only use when the conversation naturally calls for structured reflection.",
+  parameters: {
+    type: "object",
+    properties: {
+      type: {
+        type: "string",
+        enum: ["boundary_builder", "needs_assessment", "attachment_quiz"],
+        description: "The type of exercise to assign"
+      },
+      context: {
+        type: "string",
+        description: "Brief explanation of why this exercise is being assigned (1-2 sentences)"
+      }
+    },
+    required: ["type", "context"]
+  }
+};
+
+// Tool for logging major realizations
+const LOG_EPIPHANY_TOOL = {
+  name: "log_epiphany",
+  description: "Log a major psychological breakthrough or 'Aha!' moment the user has had.",
+  parameters: {
+    type: "object",
+    properties: {
+      content: { type: "string", description: "The core realization" },
+      category: { type: "string", enum: ["self", "partner", "dynamic", "growth"] }
+    },
+    required: ["content", "category"]
+  }
+};
+
+// Tool for Perspective Bridge
+const PERSPECTIVE_BRIDGE_TOOL = {
+  name: "show_perspective_bridge",
+  description: "Provide a reconstruction of the partner's internal experience to build empathy.",
+  parameters: {
+    type: "object",
+    properties: {
+      partnerPerspective: { type: "string", description: "The reconstructed inner view of the partner" },
+      suggestedMotive: { type: "string", description: "The likely underlying need or wound" }
+    },
+    required: ["partnerPerspective", "suggestedMotive"]
+  }
+};
+
+// Tool for Communication Masterclass
+const COMMUNICATION_INSIGHT_TOOL = {
+  name: "show_communication_insight",
+  description: "Provide psychological context for a specific behavior (e.g., Gottman patterns).",
+  parameters: {
+    type: "object",
+    properties: {
+      patternName: { type: "string", description: "The name of the behavior pattern" },
+      explanation: { type: "string", description: "Psychological reason why it happens" },
+      suggestion: { type: "string", description: "Healthy alternative or solution" }
+    },
+    required: ["patternName", "explanation", "suggestion"]
+  }
+};
+
+// Tool for Shadow/Projection tagging
+const FLAG_PROJECTION_TOOL = {
+  name: "flag_projection",
+  description: "Gently highlight a potential projection by the user.",
+  parameters: {
+    type: "object",
+    properties: {
+      behavior: { type: "string", description: "The behavior the user is criticizing" },
+      potentialRoot: { type: "string", description: "The user's own trait or fear that might be projected" }
+    },
+    required: ["behavior", "potentialRoot"]
+  }
+};
+
+// Tool for Closure Script
+const CLOSURE_SCRIPT_TOOL = {
+  name: "generate_closure_script",
+  description: "Generate a drafted message for ending a situation or setting a hard boundary.",
+  parameters: {
+    type: "object",
+    properties: {
+      tone: { type: "string", enum: ["polite_distant", "firm_boundary", "warm_closure", "absolute_silence"] },
+      script: { type: "string", description: "The actual text to send" },
+      explanation: { type: "string", description: "Why this approach minimizes damage/regret" }
+    },
+    required: ["tone", "script", "explanation"]
+  }
+};
+
+// Tool for Safety Intervention
+const SAFETY_INTERVENTION_TOOL = {
+  name: "trigger_safety_intervention",
+  description: "Trigger a safety protocol if abuse or crisis is detected.",
+  parameters: {
+    type: "object",
+    properties: {
+      level: { type: "string", enum: ["low", "medium", "high", "crisis"] },
+      reason: { type: "string", description: "Why safety is a concern" },
+      calmDownText: { type: "string", description: "Grounding text to help them breathe" },
+      resources: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            contact: { type: "string" },
+            url: { type: "string" }
+          },
+          required: ["name"]
+        }
+      }
+    },
+    required: ["level", "reason", "calmDownText", "resources"]
+  }
+};
+
+// Tool for Parental Patterns
+const PARENTAL_PATTERN_TOOL = {
+  name: "log_parental_pattern",
+  description: "Log a pattern where the partner mirrors a parent's trait.",
+  parameters: {
+    type: "object",
+    properties: {
+      parentTrait: { type: "string", description: "The parent's behavior/trait" },
+      partnerTrait: { type: "string", description: "The partner's mirroring behavior" },
+      dynamicName: { type: "string", description: "Name for this cycle (e.g. 'The Absent Father Cycle')" },
+      insight: { type: "string", description: "Psychological connecting insight" }
+    },
+    required: ["parentTrait", "partnerTrait", "dynamicName", "insight"]
+  }
+};
+
+// Tool for Values Matrix
+const VALUES_MATRIX_TOOL = {
+  name: "assign_values_matrix",
+  description: "Assign a matrix to compare deep values.",
+  parameters: {
+    type: "object",
+    properties: {
+      userValues: { type: "array", items: { type: "string" }, description: "User's core values" },
+      partnerValues: { type: "array", items: { type: "string" }, description: "Partner's inferred values" },
+      alignmentScore: { type: "number", description: "Estimated 0-100 alignment" },
+      conflicts: { type: "array", items: { type: "string" } },
+      synergies: { type: "array", items: { type: "string" } }
+    },
+    required: ["userValues", "partnerValues", "alignmentScore", "conflicts", "synergies"]
+  }
+};
+
+/**
+ * Stream therapist response with function calling for clinical notes and exercises.
+ */
+export const streamTherapistAdvice = async (
+  userMessage: string,
+  _previousInteractionId: string | undefined,
+  images: string[] | undefined,
+  currentNotes: ClinicalNotes | undefined,
+  onChunk: (text: string) => void,
+  onNotesUpdate: (notes: Partial<ClinicalNotes>) => void,
+  onExerciseAssign?: (exercise: { type: string; context: string }) => void,
+  onToolCall?: (toolName: string, args: any) => void
+): Promise<string> => {
+  try {
+    const parts: any[] = [];
+
+    // Add current clinical notes context if available
+    if (currentNotes && (currentNotes.keyThemes?.length || currentNotes.customNotes)) {
+      parts.push({
+        text: `[CLINICAL NOTES CONTEXT - User has provided/confirmed these observations:
+Attachment Style: ${currentNotes.attachmentStyle || 'unknown'}
+Key Themes: ${currentNotes.keyThemes?.join(', ') || 'none identified yet'}
+Emotional State: ${currentNotes.emotionalState || 'not assessed'}
+Relationship Dynamic: ${currentNotes.relationshipDynamic || 'not assessed'}
+User Insights: ${currentNotes.userInsights?.join(', ') || 'none yet'}
+User's Own Notes: ${currentNotes.customNotes || 'none'}]
+
+`
+      });
+    }
+
+    // Add images if provided
+    if (images && images.length > 0) {
+      parts.push({ text: "The user has shared these conversation screenshots for context. Analyze them carefully:" });
+      images.forEach(base64 => {
+        const cleanBase64 = base64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
+        parts.push({
+          inlineData: {
+            data: cleanBase64,
+            mimeType: "image/png"
+          }
+        });
+      });
+    }
+
+    // Add the user message
+    parts.push({ text: userMessage });
+
+    const model = ai.getGenerativeModel({
+      model: "gemini-2.0-flash-exp", // Using a real model name to avoid tsc errors if possible, or keeping the user's string if it's a proxy
+      systemInstruction: THERAPIST_SYSTEM_INSTRUCTION,
+      tools: [{
+        functionDeclarations: [
+          SESSION_ANALYSIS_TOOL,
+          ASSIGN_EXERCISE_TOOL,
+          LOG_EPIPHANY_TOOL,
+          PERSPECTIVE_BRIDGE_TOOL,
+          COMMUNICATION_INSIGHT_TOOL,
+          COMMUNICATION_INSIGHT_TOOL,
+          FLAG_PROJECTION_TOOL,
+          CLOSURE_SCRIPT_TOOL,
+          SAFETY_INTERVENTION_TOOL,
+          PARENTAL_PATTERN_TOOL,
+          VALUES_MATRIX_TOOL
+        ]
+      }]
+    });
+
+    const result = await model.generateContentStream({
+      contents: [{ role: "user", parts }],
+      safetySettings: safetySettings,
+    });
+
+    let fullText = "";
+
+    for await (const chunk of result.stream) {
+      // Handle text chunks
+      const chunkText = chunk.text();
+      if (chunkText) {
+        fullText += chunkText;
+        onChunk(chunkText);
+      }
+
+      // Handle function calls
+      const functionCalls = chunk.functionCalls();
+      if (functionCalls && functionCalls.length > 0) {
+        for (const fc of functionCalls) {
+          if (fc.name === 'update_session_analysis' && fc.args) {
+            onNotesUpdate(fc.args as Partial<ClinicalNotes>);
+          } else if (fc.name === 'assign_exercise' && fc.args && onExerciseAssign) {
+            onExerciseAssign(fc.args as { type: string; context: string });
+          } else if (onToolCall && fc.args) {
+            // Generic handler for new therapeutic tools
+            onToolCall(fc.name, fc.args);
+          }
+        }
+      }
+    }
+
+    // Return a simple session ID based on timestamp
+    return `session_${Date.now()}`;
+
+  } catch (error) {
+    console.error("Streaming Therapist Advice Failed:", error);
+    onChunk("something went wrong. let's try that again?");
+    return "";
+  }
+};
+
+/**
+ * Get therapist advice (non-streaming fallback).
+ */
+export const getTherapistAdvice = async (
+  userMessage: string,
+  _previousInteractionId?: string,
+  images?: string[]
+): Promise<TherapistResponse> => {
+  try {
+    const parts: any[] = [];
+
+    if (images && images.length > 0) {
+      parts.push({ text: "The user has shared these conversation screenshots:" });
+      images.forEach(base64 => {
+        const cleanBase64 = base64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
+        parts.push({
+          inlineData: { data: cleanBase64, mimeType: "image/png" }
+        });
+      });
+    }
+
+    parts.push({ text: userMessage });
+
+    const model = ai.getGenerativeModel({
+      model: "gemini-2.0-flash-exp",
+      systemInstruction: THERAPIST_SYSTEM_INSTRUCTION,
+      tools: [{ functionDeclarations: [SESSION_ANALYSIS_TOOL] }]
+    });
+
+    const result = await retryWithBackoff(
+      () => model.generateContent({
+        contents: [{ role: "user", parts }],
+        safetySettings: safetySettings,
+      }),
+      'getTherapistAdvice'
+    );
+
+    const response = result.response;
+    const reply = response.text() || "i'm having trouble processing that. can you try rephrasing?";
+
+    // Extract clinical notes from any function calls
+    let clinicalNotes: Partial<ClinicalNotes> | undefined;
+    const functionCalls = response.functionCalls();
+    if (functionCalls && functionCalls.length > 0) {
+      const analysisCall = functionCalls.find(fc => fc.name === 'update_session_analysis');
+      if (analysisCall?.args) {
+        clinicalNotes = analysisCall.args as Partial<ClinicalNotes>;
+      }
+    }
+
+    return {
+      reply,
+      interactionId: `session_${Date.now()}`,
+      clinicalNotes
+    };
+
+  } catch (error) {
+    console.error("Therapist Advice Failed:", error);
+    return {
+      reply: "something went wrong on my end. let's take a breath and try again?",
+      interactionId: ""
     };
   }
 };

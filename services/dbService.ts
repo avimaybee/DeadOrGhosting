@@ -340,3 +340,72 @@ export async function deleteSession(sessionId: number): Promise<{ success: boole
   if (!res.ok) throw new Error(`Failed to delete session: ${res.statusText}`);
   return res.json();
 }
+
+// ===== Therapist Sessions API =====
+
+export interface TherapistSession {
+  id?: number;
+  interaction_id: string;
+  messages: any[];
+  clinical_notes: any; // ClinicalNotes type
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
+ * Save or update a therapist session
+ */
+export async function saveTherapistSession(
+  firebaseUid: string,
+  interactionId: string,
+  messages: any[],
+  clinicalNotes: any
+): Promise<{ success: boolean; id?: number }> {
+  const res = await fetch('/api/therapist_sessions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user_anon_id: firebaseUid,
+      interaction_id: interactionId,
+      messages,
+      clinical_notes: clinicalNotes
+    })
+  });
+  if (!res.ok) throw new Error(`Failed to save therapist session: ${res.statusText}`);
+  return res.json();
+}
+
+/**
+ * Get a specific therapist session by interaction ID
+ */
+export async function getTherapistSession(interactionId: string): Promise<TherapistSession | null> {
+  const res = await fetch(`/api/therapist_sessions?interaction_id=${interactionId}`);
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`Failed to get therapist session: ${res.statusText}`);
+  }
+  const data = await res.json();
+  if (!data) return null;
+
+  // Parse JSON fields
+  return {
+    ...data,
+    messages: typeof data.messages === 'string' ? JSON.parse(data.messages) : data.messages,
+    clinical_notes: typeof data.clinical_notes === 'string' ? JSON.parse(data.clinical_notes) : data.clinical_notes
+  };
+}
+
+/**
+ * Get all therapist sessions for a user
+ */
+export async function getTherapistSessions(firebaseUid: string): Promise<TherapistSession[]> {
+  const res = await fetch(`/api/therapist_sessions?anon_id=${firebaseUid}`);
+  if (!res.ok) throw new Error(`Failed to get therapist sessions: ${res.statusText}`);
+  const data = await res.json();
+
+  return (data.sessions || []).map((s: any) => ({
+    ...s,
+    messages: typeof s.messages === 'string' ? JSON.parse(s.messages) : s.messages,
+    clinical_notes: typeof s.clinical_notes === 'string' ? JSON.parse(s.clinical_notes) : s.clinical_notes
+  }));
+}
